@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,36 +11,94 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             background-color: black;
+            overflow: scroll; /* Permite derularea pe verticală și orizontală */
         }
-        #videoElement {
+
+        /* Personalizarea barelor de derulare */
+        ::-webkit-scrollbar {
+            width: 1px; /* Grosimea barei de derulare verticală */
+            height: 0px; /* Grosimea barei de derulare orizontală */
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0); /* Culoarea și transparența thumb-ului */
+            border-radius: 4px; /* Colțurile rotunjite ale thumb-ului */
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0); /* Culoarea track-ului */
+        }
+
+        #video-container {
+            width: 100vw; /* Ocupă 100% din lățimea vizibilă a ferestrei */
+            height: 100vh; /* Ocupă 100% din înălțimea vizibilă a ferestrei */
+            position: relative;
+        }
+        video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        .scroll-space {
+            width: 100vw;
+            height: 100vh;
+        }
     </style>
 </head>
 <body>
-    <video id="videoElement" controls autoplay muted playsinline></video>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script>
-        if (Hls.isSupported()) {
-            var video = document.getElementById('videoElement');
-            var hls = new Hls();
-            hls.loadSource('https://atomic.streamnet.ro/atomictv.m3u8');
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                video.play();
-            });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = 'https://atomic.streamnet.ro/atomictv.m3u8';
-            video.addEventListener('loadedmetadata', function () {
-                video.play();
-            });
+
+<div id="video-container">
+    <video id="video" autoplay muted playsinline></video>
+</div>
+
+<div id="scroll-space"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+    const video = document.getElementById('video');
+    const videoSrc = 'https://atomic.streamnet.ro/atomictv.m3u8';
+
+    if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoSrc;
+        video.addEventListener('loadedmetadata', function() {
+            video.play();
+        });
+    }
+
+    video.addEventListener('click', function() {
+        video.muted = !video.muted;
+    });
+
+    // Adaugă dinamic mai multe spații de derulare la scroll
+    window.addEventListener('scroll', function() {
+        const scrollSpace = document.getElementById('scroll-space');
+        const scrollThreshold = 100; // Threshold pentru a adăuga spațiu înainte de a atinge marginea
+
+        if (window.scrollY + window.innerHeight + scrollThreshold >= document.documentElement.scrollHeight) {
+            for (let i = 0; i < 5; i++) {
+                let newSpace = document.createElement('div');
+                newSpace.className = 'scroll-space';
+                scrollSpace.appendChild(newSpace);
+            }
         }
-    </script>
+
+        if (window.scrollX + window.innerWidth + scrollThreshold >= document.documentElement.scrollWidth) {
+            for (let i = 0; i < 5; i++) {
+                let newSpace = document.createElement('div');
+                newSpace.className = 'scroll-space';
+                scrollSpace.appendChild(newSpace);
+            }
+        }
+    });
+</script>
+
 </body>
 </html>
