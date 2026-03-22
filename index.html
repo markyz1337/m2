@@ -31,8 +31,8 @@ body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-avail
 .pc { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; }
 
 .art-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:24px 0 8px; min-height:0; }
-.art-svg { width:min(72vw,300px); aspect-ratio:1; filter:drop-shadow(0 10px 60px rgba(0,0,0,0.7)); }
-.art-svg svg { width:100%; height:100%; }
+.art-svg { width:min(72vw,300px); aspect-ratio:1; filter:drop-shadow(0 10px 60px rgba(0,0,0,0.7)); overflow:hidden; border-radius:22px; }
+.art-svg svg, .art-svg img { width:100%; height:100%; display:block; }
 
 .info { padding:6px 24px 2px; text-align:center; }
 .smeta { display:flex; align-items:center; justify-content:center; gap:6px; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:5px; }
@@ -95,7 +95,7 @@ body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-avail
 .sti:hover { opacity:.82; }
 .sti:last-child { border-bottom:none; }
 .stlogo { width:66px; height:66px; border-radius:14px; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-.stlogo svg { width:100%; height:100%; }
+.stlogo svg, .stlogo img { width:100%; height:100%; object-fit:cover; display:block; }
 .stinfo { flex:1; min-width:0; }
 .stname { font-size:15px; font-weight:700; margin-bottom:1px; display:flex; align-items:center; }
 .stctr { font-size:12px; font-weight:600; color:rgba(255,255,255,0.42); margin-bottom:2px; }
