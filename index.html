@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Radio Player Premium</title>
+    <title>Radio Player Premium Swipe</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -73,19 +73,14 @@
             cursor: pointer;
             white-space: nowrap;
         }
-        .tab.active { 
-            background: var(--accent); 
-            border-color: transparent; 
-        }
+        .tab.active { background: var(--accent); border-color: transparent; }
 
         .content { 
             position: relative; z-index: 10; 
             flex: 1; 
             padding: 0 20px 140px 20px; 
             overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
         }
-
         .station-item {
             display: flex; 
             align-items: center; 
@@ -97,20 +92,11 @@
             width: 55px; height: 55px; 
             border-radius: 12px; 
             margin-right: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
             object-fit: cover; 
+            background: #111;
         }
-        .station-name { 
-            font-weight: 600; 
-            font-size: 16px; 
-            margin-bottom: 4px; 
-        }
-        .station-desc { 
-            font-size: 11px; 
-            color: #b3b3b3; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-        }
+        .station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+        .station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; }
 
         #player-view {
             display: none; 
@@ -120,35 +106,51 @@
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            padding: 20px 40px 100px 40px;
+            padding: 20px 0 100px 0;
+            touch-action: pan-y;
         }
+
+        .art-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
         .main-art {
-            width: 85%; 
-            aspect-ratio: 1/1; 
+            width: 280px; 
+            height: 280px; 
             border-radius: 25px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
             object-fit: cover; 
-            margin-bottom: 30px;
+            background: #111;
             transition: transform 0.6s ease, opacity 0.6s ease;
         }
-        .main-art.loading {
-            opacity: 0.4;
-            transform: scale(0.92);
+
+        .track-viewport {
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 30px;
+            position: relative;
         }
 
-        .track-info { 
-            text-align: center; 
-            margin-bottom: 30px; 
+        .track-slider-wrapper {
+            display: flex;
+            width: 300%; 
+            transform: translateX(-33.333%); 
+            transition: transform 0.3s ease-out;
+            will-change: transform;
         }
-        .track-info h2 { 
-            font-size: 22px; 
-            font-weight: 600; 
-            margin-bottom: 8px; 
+
+        .track-info-slide {
+            width: 33.333%;
+            text-align: center;
+            padding: 0 40px;
+            flex-shrink: 0;
         }
-        .track-info p { 
-            color: #b3b3b3; 
-            font-size: 14px; 
-        }
+
+        .track-info-slide h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-info-slide p { color: #b3b3b3; font-size: 14px; text-transform: uppercase; }
 
         .main-controls { 
             display: flex; 
@@ -160,24 +162,14 @@
             background: var(--glass); 
             width: 55px; height: 55px; 
             border-radius: 50%;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            display: flex; align-items: center; justify-content: center; 
             cursor: pointer;
             backdrop-filter: blur(10px); 
             border: 1px solid rgba(255,255,255,0.1); 
             color: white;
-            transition: all 0.3s ease;
         }
-        .btn-play { 
-            background: #fff; 
-            color: #000; 
-            width: 70px; height: 70px; 
-        }
-        .btn-play.playing { 
-            background: var(--accent); 
-            color: #fff; 
-        }
+        .btn-play { background: #fff; color: #000; width: 70px; height: 70px; }
+        .btn-play.playing { background: var(--accent); color: #fff; }
 
         .nav-bar {
             position: absolute; 
@@ -193,24 +185,11 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
         .nav-link {
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 4px;
-            padding: 8px 25px; 
-            border-radius: 25px; 
-            color: #777; 
-            cursor: pointer; 
-            font-size: 11px;
-            transition: all 0.3s ease;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 8px 25px; border-radius: 25px; color: #777; cursor: pointer; font-size: 11px;
         }
-        .nav-link.active { 
-            color: #fff; 
-            background: rgba(255,255,255,0.08); 
-        }
-        .nav-link.active i { 
-            color: var(--accent); 
-        }
+        .nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
+        .nav-link.active i { color: var(--accent); }
 
         .fab {
             position: absolute; 
@@ -219,15 +198,10 @@
             background: var(--accent); 
             width: 56px; height: 56px; 
             border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            display: flex; align-items: center; justify-content: center; 
             box-shadow: 0 8px 20px rgba(255, 94, 58, 0.4); 
-            cursor: pointer; 
             z-index: 15;
-            transition: transform 0.3s ease;
         }
-        .fab:active { transform: scale(0.92); }
     </style>
 </head>
 <body>
@@ -240,18 +214,29 @@
         <div class="header-tabs">
             <div class="tab active">Favorites</div>
             <div class="tab">Recent</div>
-            <div class="tab">Local</div>
             <div class="tab">All</div>
         </div>
         <div class="content" id="stations-list"></div>
-        <div class="fab" onclick="alert('Add Custom Station')"><i data-lucide="plus"></i></div>
+        <div class="fab" onclick="alert('Adaugă post')"><i data-lucide="plus"></i></div>
     </div>
 
     <div id="player-view">
-        <img src="" class="main-art" id="player-img">
-        <div class="track-info">
-            <h2 id="station-title">Select Station</h2>
-            <p id="station-sub">Tap a station to start</p>
+        <div class="art-container" id="swipe-zone-art">
+            <img src="" class="main-art" id="player-img" onerror="this.src=FALLBACK_IMG">
+        </div>
+
+        <div class="track-viewport" id="swipe-zone-text">
+            <div class="track-slider-wrapper" id="info-wrapper">
+                <div class="track-info-slide" id="slide-prev">
+                    <h2>Nume Post</h2><p>Gen Muzical</p>
+                </div>
+                <div class="track-info-slide" id="slide-current">
+                    <h2>Selectează Post</h2><p>Apasă pe o stație</p>
+                </div>
+                <div class="track-info-slide" id="slide-next">
+                    <h2>Nume Post</h2><p>Gen Muzical</p>
+                </div>
+            </div>
         </div>
 
         <div class="main-controls">
@@ -268,92 +253,162 @@
         <div class="nav-link" id="nav-player" onclick="switchTab('player')">
             <i data-lucide="play-circle"></i><span>Player</span>
         </div>
-        <div class="nav-link" onclick="alert('Settings')">
-            <i data-lucide="settings"></i><span>Settings</span>
-        </div>
     </div>
 </div>
 
 <audio id="audio-engine"></audio>
 
 <script>
+    const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.13982720394888960.16320d2b-98f6-4b3b-af8d-f33140cf192a.778f4c59-a76c-44c0-82f7-bd7357649848";
+
     const stations = [
-        { 
-            name: "ONE FM DANCE STATION", 
-            stream: "https://live.onefm.ro/onefm.aacp", 
-            img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", 
-            desc: "DANCE, ELECTRONIC, HOUSE, TECHNO" 
-        },
-        { 
-            name: "HEART 10S", 
-            stream: "https://media-ice.musicradio.com/Heart10sMP3", 
-            img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", 
-            desc: "POP, HITS, CHART, 80S, 90S" 
-        }
+        { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO" },
+        { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS" },
+        { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS" },
+        { name: "Kiss 10s", stream: "https://dc.digi.live.kissfm.ro/kiss.hits.from.the.10s/listen.m3u", img: "https://api.kissfm.ro/resized/streams/homepage/2025/01/10/cover-kiss-hits-from-the-10s_6210a8bb4e6b58d8b6d2c0342721cdb9.png", desc: "HITS FROM THE 10S" },
+        { name: "DFM DANCE", stream: "https://dfm-dancegold10.hostingradio.ru/dancegold1096.aacp", img: "https://americadance90.com.br/wp-content/uploads/2024/05/DFM-Dance-Gold-90s.png", desc: "DANCE GOLD, 90S" },
+        { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://www.radiorecord.ru/icons/apple-touch-icon.png", desc: "RECORD RUSSIAN MIX" },
+        { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://myradioonline.ro/public/uploads/radio_img/pro-dj-radio/play_250_250.webp", desc: "DJ MIX, CLUB, DANCE" },
+        { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE" },
+        { name: "HEART 10S", stream: "https://media-ice.musicradio.com/Heart10sMP3", img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", desc: "POP, HITS, CHART" },
+        { name: "RADIO ZU", stream: "https://live.radiozu.ro:8000/radiozu.aacp", img: "https://upload.wikimedia.org/wikipedia/ro/c/c5/Logo_Radio_ZU.png", desc: "POP, TOP 40, ROMANIA" },
+        { name: "ROCK FM", stream: "https://live.rockfm.ro/rockfm.aacp", img: "https://www.rockfm.ro/img/logo-rockfm.png", desc: "CLASSIC ROCK, METAL" }
     ];
 
     let currentIdx = 0;
-    let activeLayer = 1; // 1 sau 2
+    let activeLayer = 1;
+    let startX = 0;
+    let currentTranslate = 0;
+    let isDragging = false;
     const audio = document.getElementById('audio-engine');
+    const wrapper = document.getElementById('info-wrapper');
 
     function init() {
         const list = document.getElementById('stations-list');
         stations.forEach((s, i) => {
+            const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
             const item = document.createElement('div');
             item.className = 'station-item';
             item.innerHTML = `
-                <img src="${s.img}" class="station-thumb">
+                <img src="${finalImg}" class="station-thumb" onerror="this.src=FALLBACK_IMG">
                 <div style="flex:1">
                     <div class="station-name">${s.name}</div>
                     <div class="station-desc">${s.desc}</div>
                 </div>
-                <i data-lucide="heart" size="18" color="#ff5e3a" fill="#ff5e3a"></i>
             `;
             item.onclick = () => { currentIdx = i; playStation(); };
             list.appendChild(item);
         });
         lucide.createIcons();
-        loadStation(0); 
+        updateSliderText();
+        loadStationInfo(0, false); 
+        setupSwipe();
     }
 
-    function loadStation(idx) {
+    function updateSliderText() {
+        const prevIdx = (currentIdx - 1 + stations.length) % stations.length;
+        const nextIdx = (currentIdx + 1) % stations.length;
+
+        updateSlide('slide-prev', stations[prevIdx]);
+        updateSlide('slide-current', stations[currentIdx]);
+        updateSlide('slide-next', stations[nextIdx]);
+    }
+
+    function updateSlide(id, data) {
+        const el = document.getElementById(id);
+        el.querySelector('h2').innerText = data.name;
+        el.querySelector('p').innerText = data.desc;
+    }
+
+    function loadStationInfo(idx, shouldPlay = true) {
         const s = stations[idx];
-        
-        // Artwork cu fade mic
         const art = document.getElementById('player-img');
-        art.classList.add('loading');
+        const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
         
+        art.classList.add('loading');
         setTimeout(() => {
-            art.src = s.img;
+            art.src = finalImg;
             art.classList.remove('loading');
         }, 300);
 
-        // Titlu & descriere
-        document.getElementById('station-title').innerText = s.name;
-        document.getElementById('station-sub').innerText = s.desc;
-
-        // Audio
         audio.src = s.stream;
+        if(shouldPlay) audio.play().catch(e => console.log(e));
 
-        // Crossfade fundal blur
-        const layer1 = document.getElementById('bg-layer-1');
-        const layer2 = document.getElementById('bg-layer-2');
-        
-        const nextLayer = activeLayer === 1 ? layer2 : layer1;
-        const prevLayer = activeLayer === 1 ? layer1 : layer2;
+        const l1 = document.getElementById('bg-layer-1');
+        const l2 = document.getElementById('bg-layer-2');
+        const nextL = activeLayer === 1 ? l2 : l1;
+        const prevL = activeLayer === 1 ? l1 : l2;
 
-        nextLayer.style.backgroundImage = `url(${s.img})`;
-        nextLayer.style.opacity = '1';
-        prevLayer.style.opacity = '0';
-
+        nextL.style.backgroundImage = `url(${finalImg})`;
+        nextL.style.opacity = '1';
+        prevL.style.opacity = '0';
         activeLayer = activeLayer === 1 ? 2 : 1;
+
+        updateUI(!audio.paused && shouldPlay);
     }
 
     function playStation() {
-        loadStation(currentIdx);
-        audio.play().catch(e => console.log("Play error:", e));
-        updateUI(true);
+        updateSliderText();
+        loadStationInfo(currentIdx, true);
         switchTab('player');
+    }
+
+    function next() {
+        currentIdx = (currentIdx + 1) % stations.length;
+        animateTransition('next');
+    }
+
+    function prev() {
+        currentIdx = (currentIdx - 1 + stations.length) % stations.length;
+        animateTransition('prev');
+    }
+
+    function animateTransition(direction) {
+        wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        const target = direction === 'next' ? -66.666 : 0;
+        wrapper.style.transform = `translateX(${target}%)`;
+
+        setTimeout(() => {
+            wrapper.style.transition = 'none';
+            loadStationInfo(currentIdx, true);
+            updateSliderText();
+            wrapper.style.transform = `translateX(-33.333%)`;
+        }, 400);
+    }
+
+    function setupSwipe() {
+        const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
+        
+        zones.forEach(zone => {
+            zone.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+                wrapper.style.transition = 'none';
+            });
+
+            zone.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const x = e.touches[0].clientX;
+                const diff = x - startX;
+                const movePercent = (diff / window.innerWidth) * 33; 
+                wrapper.style.transform = `translateX(calc(-33.333% + ${movePercent}%))`;
+            });
+
+            zone.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                const endX = e.changedTouches[0].clientX;
+                const diff = endX - startX;
+
+                if (Math.abs(diff) > 70) {
+                    if (diff > 0) prev();
+                    else next();
+                } else {
+                    wrapper.style.transition = 'transform 0.3s ease';
+                    wrapper.style.transform = `translateX(-33.333%)`;
+                }
+            });
+        });
     }
 
     function togglePlay() {
@@ -373,16 +428,6 @@
             : '<i data-lucide="play" fill="currentColor"></i>';
         btn.classList.toggle('playing', isPlaying);
         lucide.createIcons();
-    }
-
-    function next() { 
-        currentIdx = (currentIdx + 1) % stations.length; 
-        playStation(); 
-    }
-
-    function prev() { 
-        currentIdx = (currentIdx - 1 + stations.length) % stations.length; 
-        playStation(); 
     }
 
     function switchTab(view) {
