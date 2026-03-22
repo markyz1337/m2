@@ -1,208 +1,208 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Radio Player Premium Swipe</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        :root {
-            --accent: #ff5e3a;
-            --glass: rgba(255, 255, 255, 0.1);
-            --bg-dark: #000000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Radio Player Premium Swipe</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root {
+    --accent: #ff5e3a;
+    --glass: rgba(255, 255, 255, 0.1);
+    --bg-dark: #000000;
+}
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; padding: 0; 
-            font-family: 'Inter', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        
-        body { 
-            background: var(--bg-dark); 
-            color: white; 
-            height: 100dvh; 
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-        }
+* { 
+    box-sizing: border-box; 
+    margin: 0; padding: 0; 
+    font-family: 'Inter', sans-serif; 
+    -webkit-tap-highlight-color: transparent; 
+}
 
-        .app-container {
-            width: 100%; 
-            max-width: 430px; 
-            height: 100%;
-            position: relative; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+body { 
+    background: var(--bg-dark); 
+    color: white; 
+    height: 100dvh; 
+    overflow: hidden; 
+    display: flex; 
+    justify-content: center; 
+}
 
-        .bg-blur {
-            position: absolute; 
-            top: -25%; left: -25%; 
-            width: 150%; height: 150%;
-            background-size: cover; 
-            background-position: center;
-            filter: blur(70px) brightness(0.4);
-            transform: rotate(30deg);
-            transition: opacity 1.2s cubic-bezier(0.4, 0.0, 0.2, 1);
-            will-change: opacity;
-            background-repeat: no-repeat;
-            z-index: 0;
-        }
+.app-container {
+    width: 100%; 
+    max-width: 430px; 
+    height: 100%;
+    position: relative; 
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+}
 
-        #bg-layer-1 { opacity: 1; }
-        #bg-layer-2 { opacity: 0; }
+.bg-blur {
+    position: absolute; 
+    top: -25%; left: -25%; 
+    width: 150%; height: 150%;
+    background-size: cover; 
+    background-position: center;
+    filter: blur(70px) brightness(0.4);
+    transform: rotate(30deg);
+    transition: opacity 1.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    will-change: opacity;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
 
-        .header-tabs {
-            position: relative; z-index: 10; 
-            padding: 20px 20px 10px 20px; 
-            display: flex; gap: 10px; 
-            overflow-x: auto;
-        }
-        .tab {
-            background: var(--glass); 
-            padding: 8px 18px; 
-            border-radius: 20px; 
-            font-size: 13px;
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .tab.active { background: var(--accent); border-color: transparent; }
+#bg-layer-1 { opacity: 1; }
+#bg-layer-2 { opacity: 0; }
 
-        .content { 
-            position: relative; z-index: 10; 
-            flex: 1; 
-            padding: 0 20px 140px 20px; 
-            overflow-y: auto; 
-        }
-        .station-item {
-            display: flex; 
-            align-items: center; 
-            padding: 15px 0;
-            border-bottom: 0.5px solid rgba(255,255,255,0.1); 
-            cursor: pointer;
-        }
-        .station-thumb { 
-            width: 55px; height: 55px; 
-            border-radius: 12px; 
-            margin-right: 15px; 
-            object-fit: cover; 
-            background: #111;
-        }
-        .station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-        .station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; }
+.header-tabs {
+    position: relative; z-index: 10; 
+    padding: 20px 20px 10px 20px; 
+    display: flex; gap: 10px; 
+    overflow-x: auto;
+}
+.tab {
+    background: var(--glass); 
+    padding: 8px 18px; 
+    border-radius: 20px; 
+    font-size: 13px;
+    backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tab.active { background: var(--accent); border-color: transparent; }
 
-        #player-view {
-            display: none; 
-            position: relative; 
-            z-index: 10; 
-            height: 100%;
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px 0 100px 0;
-            touch-action: pan-y;
-        }
+.content { 
+    position: relative; z-index: 10; 
+    flex: 1; 
+    padding: 0 20px 140px 20px; 
+    overflow-y: auto; 
+}
+.station-item {
+    display: flex; 
+    align-items: center; 
+    padding: 15px 0;
+    border-bottom: 0.5px solid rgba(255,255,255,0.1); 
+    cursor: pointer;
+}
+.station-thumb { 
+    width: 55px; height: 55px; 
+    border-radius: 12px; 
+    margin-right: 15px; 
+    object-fit: cover; 
+    background: #111;
+}
+.station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; }
 
-        .art-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
+#player-view {
+    display: none; 
+    position: relative; 
+    z-index: 10; 
+    height: 100%;
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 20px 0 100px 0;
+    touch-action: pan-y;
+}
 
-        .main-art {
-            width: 280px; 
-            height: 280px; 
-            border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
-            object-fit: cover; 
-            background: #111;
-            transition: transform 0.6s ease, opacity 0.6s ease;
-        }
+.art-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
 
-        .track-viewport {
-            width: 100%;
-            overflow: hidden;
-            margin-bottom: 30px;
-            position: relative;
-        }
+.main-art {
+    width: 280px; 
+    height: 280px; 
+    border-radius: 25px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
+    object-fit: cover; 
+    background: #111;
+    transition: transform 0.6s ease, opacity 0.6s ease;
+}
 
-        .track-slider-wrapper {
-            display: flex;
-            width: 300%; 
-            transform: translateX(-33.333%); 
-            transition: transform 0.3s ease-out;
-            will-change: transform;
-        }
+.track-viewport {
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 30px;
+    position: relative;
+}
 
-        .track-info-slide {
-            width: 33.333%;
-            text-align: center;
-            padding: 0 40px;
-            flex-shrink: 0;
-        }
+.track-slider-wrapper {
+    display: flex;
+    width: 300%; 
+    transform: translateX(-33.333%); 
+    transition: transform 0.3s ease-out;
+    will-change: transform;
+}
 
-        .track-info-slide h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-info-slide p { color: #b3b3b3; font-size: 14px; text-transform: uppercase; }
+.track-info-slide {
+    width: 33.333%;
+    text-align: center;
+    padding: 0 40px;
+    flex-shrink: 0;
+}
 
-        .main-controls { 
-            display: flex; 
-            align-items: center; 
-            gap: 30px; 
-            margin-bottom: 20px; 
-        }
-        .btn-round {
-            background: var(--glass); 
-            width: 55px; height: 55px; 
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer;
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            color: white;
-        }
-        .btn-play { background: #fff; color: #000; width: 70px; height: 70px; }
-        .btn-play.playing { background: var(--accent); color: #fff; }
+.track-info-slide h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-info-slide p { color: #b3b3b3; font-size: 14px; text-transform: uppercase; }
 
-        .nav-bar {
-            position: absolute; 
-            bottom: calc(15px + env(safe-area-inset-bottom));
-            left: 20px; right: 20px; 
-            z-index: 50; 
-            background: rgba(20,20,20,0.85); 
-            backdrop-filter: blur(25px); 
-            border-radius: 35px; 
-            display: flex; 
-            justify-content: space-around; 
-            padding: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .nav-link {
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            padding: 8px 25px; border-radius: 25px; color: #777; cursor: pointer; font-size: 11px;
-        }
-        .nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
-        .nav-link.active i { color: var(--accent); }
+.main-controls { 
+    display: flex; 
+    align-items: center; 
+    gap: 30px; 
+    margin-bottom: 20px; 
+}
+.btn-round {
+    background: var(--glass); 
+    width: 55px; height: 55px; 
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; 
+    cursor: pointer;
+    backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white;
+}
+.btn-play { background: #fff; color: #000; width: 70px; height: 70px; }
+.btn-play.playing { background: var(--accent); color: #fff; }
 
-        .fab {
-            position: absolute; 
-            bottom: calc(100px + env(safe-area-inset-bottom)); 
-            right: 25px; 
-            background: var(--accent); 
-            width: 56px; height: 56px; 
-            border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 8px 20px rgba(255, 94, 58, 0.4); 
-            z-index: 15;
-        }
-    </style>
+.nav-bar {
+    position: absolute; 
+    bottom: calc(15px + env(safe-area-inset-bottom));
+    left: 20px; right: 20px; 
+    z-index: 50; 
+    background: rgba(20,20,20,0.85); 
+    backdrop-filter: blur(25px); 
+    border-radius: 35px; 
+    display: flex; 
+    justify-content: space-around; 
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.nav-link {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 25px; border-radius: 25px; color: #777; cursor: pointer; font-size: 11px;
+}
+.nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
+.nav-link.active i { color: var(--accent); }
+
+.fab {
+    position: absolute; 
+    bottom: calc(100px + env(safe-area-inset-bottom)); 
+    right: 25px; 
+    background: var(--accent); 
+    width: 56px; height: 56px; 
+    border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; 
+    box-shadow: 0 8px 20px rgba(255, 94, 58, 0.4); 
+    z-index: 15;
+}
+</style>
 </head>
 <body>
 
@@ -259,9 +259,9 @@
 <audio id="audio-engine"></audio>
 
 <script>
-    const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.13982720394888960.16320d2b-98f6-4b3b-af8d-f33140cf192a.778f4c59-a76c-44c0-82f7-bd7357649848";
+const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.13982720394888960.16320d2b-98f6-4b3b-af8d-f33140cf192a.778f4c59-a76c-44c0-82f7-bd7357649848";
 
-    const stations = [
+const stations = [
         { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO" },
         { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS" },
         { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS" },
@@ -275,169 +275,181 @@
         { name: "ROCK FM", stream: "https://live.rockfm.ro/rockfm.aacp", img: "https://www.rockfm.ro/img/logo-rockfm.png", desc: "CLASSIC ROCK, METAL" }
     ];
 
-    let currentIdx = 0;
-    let activeLayer = 1;
-    let startX = 0;
-    let currentTranslate = 0;
-    let isDragging = false;
-    const audio = document.getElementById('audio-engine');
-    const wrapper = document.getElementById('info-wrapper');
 
-    function init() {
-        const list = document.getElementById('stations-list');
-        stations.forEach((s, i) => {
-            const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
-            const item = document.createElement('div');
-            item.className = 'station-item';
-            item.innerHTML = `
-                <img src="${finalImg}" class="station-thumb" onerror="this.src=FALLBACK_IMG">
-                <div style="flex:1">
-                    <div class="station-name">${s.name}</div>
-                    <div class="station-desc">${s.desc}</div>
-                </div>
-            `;
-            item.onclick = () => { currentIdx = i; playStation(); };
-            list.appendChild(item);
-        });
-        lucide.createIcons();
-        updateSliderText();
-        loadStationInfo(0, false); 
-        setupSwipe();
-    }
+let currentIdx = 0;
+let activeLayer = 1;
+let startX = 0;
+let isDragging = false;
+const audio = document.getElementById('audio-engine');
+const wrapper = document.getElementById('info-wrapper');
 
-    function updateSliderText() {
-        const prevIdx = (currentIdx - 1 + stations.length) % stations.length;
-        const nextIdx = (currentIdx + 1) % stations.length;
-
-        updateSlide('slide-prev', stations[prevIdx]);
-        updateSlide('slide-current', stations[currentIdx]);
-        updateSlide('slide-next', stations[nextIdx]);
-    }
-
-    function updateSlide(id, data) {
-        const el = document.getElementById(id);
-        el.querySelector('h2').innerText = data.name;
-        el.querySelector('p').innerText = data.desc;
-    }
-
-    function loadStationInfo(idx, shouldPlay = true) {
-        const s = stations[idx];
-        const art = document.getElementById('player-img');
+function init() {
+    const list = document.getElementById('stations-list');
+    stations.forEach((s, i) => {
         const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
-        
-        art.classList.add('loading');
-        setTimeout(() => {
-            art.src = finalImg;
-            art.classList.remove('loading');
-        }, 300);
+        const item = document.createElement('div');
+        item.className = 'station-item';
+        item.innerHTML = `
+            <img src="${finalImg}" class="station-thumb" onerror="this.src=FALLBACK_IMG">
+            <div style="flex:1">
+                <div class="station-name">${s.name}</div>
+                <div class="station-desc">${s.desc}</div>
+            </div>
+        `;
+        item.onclick = () => { currentIdx = i; playStation(); };
+        list.appendChild(item);
+    });
+    lucide.createIcons();
+    updateSliderText();
+    loadStationInfo(0, false); 
+    setupSwipe();
+}
 
-        audio.src = s.stream;
-        if(shouldPlay) audio.play().catch(e => console.log(e));
+function updateSliderText() {
+    const prevIdx = (currentIdx - 1 + stations.length) % stations.length;
+    const nextIdx = (currentIdx + 1) % stations.length;
 
-        const l1 = document.getElementById('bg-layer-1');
-        const l2 = document.getElementById('bg-layer-2');
-        const nextL = activeLayer === 1 ? l2 : l1;
-        const prevL = activeLayer === 1 ? l1 : l2;
+    updateSlide('slide-prev', stations[prevIdx]);
+    updateSlide('slide-current', stations[currentIdx]);
+    updateSlide('slide-next', stations[nextIdx]);
+}
 
-        nextL.style.backgroundImage = `url(${finalImg})`;
-        nextL.style.opacity = '1';
-        prevL.style.opacity = '0';
-        activeLayer = activeLayer === 1 ? 2 : 1;
+function updateSlide(id, data) {
+    const el = document.getElementById(id);
+    el.querySelector('h2').innerText = data.name;
+    el.querySelector('p').innerText = data.desc;
+}
 
-        updateUI(!audio.paused && shouldPlay);
-    }
+function loadStationInfo(idx, shouldPlay = true) {
+    const s = stations[idx];
+    const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
+    
+    const art = document.getElementById('player-img');
+    art.classList.add('loading');
+    setTimeout(() => { art.src = finalImg; art.classList.remove('loading'); }, 300);
 
-    function playStation() {
-        updateSliderText();
+    audio.src = s.stream;
+    if(shouldPlay) audio.play().catch(e => console.log(e));
+
+    const l1 = document.getElementById('bg-layer-1');
+    const l2 = document.getElementById('bg-layer-2');
+    const nextL = activeLayer === 1 ? l2 : l1;
+    const prevL = activeLayer === 1 ? l1 : l2;
+
+    nextL.style.backgroundImage = `url(${finalImg})`;
+    nextL.style.opacity = '1';
+    prevL.style.opacity = '0';
+    activeLayer = activeLayer === 1 ? 2 : 1;
+
+    updateUI(!audio.paused && shouldPlay);
+}
+
+function playStation() {
+    updateSliderText();
+    loadStationInfo(currentIdx, true);
+    switchTab('player');
+}
+
+function next() {
+    currentIdx = (currentIdx + 1) % stations.length;
+    animateTransition('next');
+}
+
+function prev() {
+    currentIdx = (currentIdx - 1 + stations.length) % stations.length;
+    animateTransition('prev');
+}
+
+function animateTransition(direction) {
+    wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    const target = direction === 'next' ? -66.666 : 0;
+    wrapper.style.transform = `translateX(${target}%)`;
+
+    setTimeout(() => {
+        wrapper.style.transition = 'none';
         loadStationInfo(currentIdx, true);
-        switchTab('player');
-    }
+        updateSliderText();
+        wrapper.style.transform = `translateX(-33.333%)`;
+    }, 400);
+}
 
-    function next() {
-        currentIdx = (currentIdx + 1) % stations.length;
-        animateTransition('next');
-    }
-
-    function prev() {
-        currentIdx = (currentIdx - 1 + stations.length) % stations.length;
-        animateTransition('prev');
-    }
-
-    function animateTransition(direction) {
-        wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        const target = direction === 'next' ? -66.666 : 0;
-        wrapper.style.transform = `translateX(${target}%)`;
-
-        setTimeout(() => {
+function setupSwipe() {
+    const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
+    
+    zones.forEach(zone => {
+        zone.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
             wrapper.style.transition = 'none';
-            loadStationInfo(currentIdx, true);
-            updateSliderText();
-            wrapper.style.transform = `translateX(-33.333%)`;
-        }, 400);
-    }
-
-    function setupSwipe() {
-        const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
-        
-        zones.forEach(zone => {
-            zone.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-                wrapper.style.transition = 'none';
-            });
-
-            zone.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                const x = e.touches[0].clientX;
-                const diff = x - startX;
-                const movePercent = (diff / window.innerWidth) * 33; 
-                wrapper.style.transform = `translateX(calc(-33.333% + ${movePercent}%))`;
-            });
-
-            zone.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                const endX = e.changedTouches[0].clientX;
-                const diff = endX - startX;
-
-                if (Math.abs(diff) > 70) {
-                    if (diff > 0) prev();
-                    else next();
-                } else {
-                    wrapper.style.transition = 'transform 0.3s ease';
-                    wrapper.style.transform = `translateX(-33.333%)`;
-                }
-            });
         });
-    }
 
-    function togglePlay() {
-        if (audio.paused) {
-            audio.play().catch(e => console.log(e));
-            updateUI(true);
-        } else {
-            audio.pause();
-            updateUI(false);
-        }
-    }
+        zone.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const x = e.touches[0].clientX;
+            const diff = x - startX;
+            const movePercent = (diff / window.innerWidth) * 33; 
+            wrapper.style.transform = `translateX(calc(-33.333% + ${movePercent}%))`;
+        });
 
-    function updateUI(isPlaying) {
-        const btn = document.getElementById('play-trigger');
-        btn.innerHTML = isPlaying 
-            ? '<i data-lucide="pause" fill="currentColor"></i>' 
-            : '<i data-lucide="play" fill="currentColor"></i>';
-        btn.classList.toggle('playing', isPlaying);
-        lucide.createIcons();
-    }
+        zone.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+                        const x = e.changedTouches[0].clientX;
+            const diff = x - startX;
+            if(diff > 50) prev();
+            else if(diff < -50) next();
+            else wrapper.style.transform = 'translateX(-33.333%)';
+            isDragging = false;
+        });
+    });
+}
 
-    function switchTab(view) {
-        document.getElementById('list-view').style.display = view === 'list' ? 'flex' : 'none';
-        document.getElementById('player-view').style.display = view === 'player' ? 'flex' : 'none';
-        document.getElementById('nav-list').classList.toggle('active', view === 'list');
-        document.getElementById('nav-player').classList.toggle('active', view === 'player');
+function togglePlay() {
+    const btn = document.getElementById('play-trigger');
+    if(audio.paused) {
+        audio.play().catch(e => console.log(e));
+        btn.classList.add('playing');
+        btn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+    } else {
+        audio.pause();
+        btn.classList.remove('playing');
+        btn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
     }
+    lucide.createIcons();
+}
 
-    init();
+function switchTab(tab) {
+    const listView = document.getElementById('list-view');
+    const playerView = document.getElementById('player-view');
+    const navList = document.getElementById('nav-list');
+    const navPlayer = document.getElementById('nav-player');
+
+    if(tab === 'list') {
+        listView.style.display = 'flex';
+        playerView.style.display = 'none';
+        navList.classList.add('active');
+        navPlayer.classList.remove('active');
+    } else {
+        listView.style.display = 'none';
+        playerView.style.display = 'flex';
+        navList.classList.remove('active');
+        navPlayer.classList.add('active');
+    }
+}
+
+function updateUI(playing) {
+    const btn = document.getElementById('play-trigger');
+    if(playing) {
+        btn.classList.add('playing');
+        btn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+    } else {
+        btn.classList.remove('playing');
+        btn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+    }
+    lucide.createIcons();
+}
+
+// Initialize app
+init();
 </script>
 </body>
 </html>
