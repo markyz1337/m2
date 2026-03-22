@@ -1,523 +1,436 @@
-<!DOCTYPE html><html lang="ro"><head>
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Player App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --accent-color: #ff5e3a;
+            --text-main: #ffffff;
+            --text-secondary: #b3b3b3;
+            --glass: rgba(30, 30, 30, 0.6);
+        }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Radio Player</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/icecast-metadata-player/1.17.13/icecast-metadata-player-1.17.13.main.min.js"
-        onerror="icyFallback=true" crossorigin="anonymous"></script>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-html { height:100%; height:-webkit-fill-available; }
-body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-available; background:#000; color:#fff; font-family:'Inter',sans-serif; overflow:hidden; }
-.app { max-width:430px; margin:0 auto; height:100vh; height:100dvh; height:-webkit-fill-available; display:flex; flex-direction:column; overflow:hidden; position:relative; }
-.view { display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
-.view.active { display:flex; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
 
-/* ===== PLAYER ===== */
-#player-view { position:relative; }
-.pbg { position:absolute; inset:0; z-index:0; overflow:hidden; }
-.pbg-img {
-position:absolute;
-inset:-50%;
-width:200%; height:200%;
-background-size:cover;
-background-position:center;
-transform:rotate(30deg) scale(1.1);
-filter:blur(48px) saturate(1.6) brightness(0.7);
-opacity:0.9;
-transition:background-image 0.7s ease;
-}
-.pbg-overlay {
-position:absolute; inset:0;
-transition:background 0.7s ease;
-}
-.pc { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; justify-content:flex-start; padding-top:10%; }
-.art-wrap { flex:0 0 auto; display:flex; align-items:center; justify-content:center; padding:8px 0 6px; min-height:0; }
-.art-svg { width:min(52vw,200px); aspect-ratio:1; filter:drop-shadow(0 8px 40px rgba(0,0,0,0.7)); overflow:hidden; border-radius:18px; }
-.art-svg svg, .art-svg img { width:100%; height:100%; display:block; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
 
-/* Compact info */
-.info { padding:4px 20px 2px; text-align:center; }
-.smeta { display:flex; align-items:center; justify-content:center; gap:5px; font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:3px; }
-.st-label { font-size:10px; font-weight:600; color:rgba(255,255,255,0.45); margin-bottom:3px; letter-spacing:0.3px; }
-#song-block .s-title { font-size:18px; font-weight:800; letter-spacing:0.3px; line-height:1.15; }
-#song-block .s-artist { font-size:13px; color:rgba(255,255,255,0.7); margin-top:2px; }
-#song-block .s-album  { font-size:11px; color:rgba(255,255,255,0.32); margin-top:1px; }
-#fallback-block .st-big  { font-size:18px; font-weight:800; letter-spacing:0.4px; }
-#fallback-block .st-tags { font-size:11px; color:rgba(255,255,255,0.38); margin-top:2px; letter-spacing:0.4px; }
-#fallback-block .st-ctr  { font-size:11px; color:rgba(255,255,255,0.38); letter-spacing:0.4px; }
+        /* Containerul principal - stil mobil */
+        .app-container {
+            width: 100%;
+            max-width: 430px;
+            height: 100%;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-/* Controls */
-.ctrl-row { display:flex; align-items:center; justify-content:center; gap:30px; padding:14px 20px 4px; }
-.ctrl { background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer; padding:8px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s,transform .1s; }
-.ctrl:hover { color:#fff; }
-.ctrl:active { transform:scale(.9); }
-.ctrl-play { width:72px; height:72px; background:rgba(255,255,255,0.14); border:none; border-radius:20px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .1s; backdrop-filter:blur(8px); }
-.ctrl-play:hover { background:rgba(255,255,255,0.24); }
-.ctrl-play:active { transform:scale(.92); }
+        /* Fundal Dinamic Blur */
+        .dynamic-bg {
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(60px) brightness(0.4);
+            transform: rotate(30deg);
+            z-index: 0;
+            transition: background-image 0.5s ease;
+        }
 
-.live-row { display:flex; align-items:center; gap:10px; padding:2px 20px; }
-.ll { flex:1; height:2px; background:rgba(255,255,255,0.1); border-radius:2px; }
-.ltag { font-size:9px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.3); }
+        /* Header / Tabs */
+        .tabs {
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
 
-/* Action row */
-.act-row { display:flex; align-items:center; justify-content:center; gap:10px; padding:6px 16px 14px; }
-.abt { background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:10px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s; }
-.abt:hover { color:#fff; }
-.abt.fav-on { color:#e03060; }
+        .tab {
+            background: var(--card-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
 
-/* ===== BOTTOM NAV ===== */
-.bnav { display:flex; padding:6px 8px 20px; background:rgba(10,6,6,0.88); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter:blur(20px); flex-shrink:0; z-index:100; gap:4px; }
-.nbtn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:none; border:none; color:rgba(255,255,255,0.38); cursor:pointer; padding:8px 6px; font-family:‘Inter’,sans-serif; font-size:10px; font-weight:600; border-radius:16px; transition:all .2s; }
-.nbtn.active { background:rgba(255,107,43,0.15); color:#FF6B2B; border-radius:20px; }
+        .tab.active {
+            background: var(--accent-color);
+        }
 
-/* ===== RADIO VIEW ===== */
-#radio-view { background:#000; }
-.rtop { padding:12px 12px 0; flex-shrink:0; }
-.tscroll { display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; padding-bottom:8px; }
-.tscroll::-webkit-scrollbar { display:none; }
-.ttab { white-space:nowrap; padding:7px 14px; border-radius:20px; border:none; background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.48); font-family:‘Inter’,sans-serif; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .2s; }
-.ttab.active { background:#FF6B2B; color:#fff; }
-.sscroll { display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; padding-bottom:7px; }
-.sscroll::-webkit-scrollbar { display:none; }
-.sbtn { padding:4px 12px; border-radius:14px; border:1.5px solid rgba(255,255,255,0.1); background:none; color:rgba(255,255,255,0.42); font-family:‘Inter’,sans-serif; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:5px; transition:all .2s; }
-.sbtn.active { border-color:#FF6B2B; color:#FF6B2B; }
-.swrap { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
-.sbox { flex:1; display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.06); border-radius:20px; padding:7px 12px; }
-.sbox input { flex:1; background:none; border:none; color:#fff; font-family:‘Inter’,sans-serif; font-size:12px; outline:none; }
-.sbox input::placeholder { color:rgba(255,255,255,0.28); }
-.cbadge { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.48); font-size:11px; font-weight:700; padding:6px 11px; border-radius:14px; }
-.stlist { flex:1; overflow-y:auto; padding:2px 12px 8px; scrollbar-width:none; min-height:0; }
-.stlist::-webkit-scrollbar { display:none; }
-.sti { display:flex; align-items:center; gap:11px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; transition:opacity .15s; }
-.sti:hover { opacity:.82; }
-.sti:last-child { border-bottom:none; }
-.stlogo { width:54px; height:54px; border-radius:12px; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-.stlogo svg, .stlogo img { width:100%; height:100%; object-fit:cover; display:block; }
-.stinfo { flex:1; min-width:0; }
-.stname { font-size:14px; font-weight:700; margin-bottom:1px; display:flex; align-items:center; }
-.stctr { font-size:11px; font-weight:600; color:rgba(255,255,255,0.42); margin-bottom:1px; }
-.sttags { font-size:10px; color:rgba(255,255,255,0.28); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sttech { display:flex; gap:7px; font-size:10px; color:rgba(255,255,255,0.22); }
-.stfav { background:none; border:none; cursor:pointer; color:#e03060; padding:5px; opacity:.28; flex-shrink:0; transition:opacity .2s; }
-.stfav.on { opacity:1; }
-.myhd { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0 8px; }
-.myhd-l h3 { font-size:15px; font-weight:800; }
-.myhd-l p { font-size:11px; color:rgba(255,255,255,0.38); margin-top:2px; }
-.mycnt { text-align:right; font-size:13px; font-weight:800; color:rgba(255,255,255,0.48); }
-.mycnt small { display:block; font-size:9px; font-weight:500; }
-.fab { position:absolute; bottom:80px; right:16px; width:48px; height:48px; border-radius:50%; background:#FF6B2B; border:none; color:#fff; font-size:24px; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 4px 18px rgba(255,107,43,.45); z-index:10; transition:transform .2s; }
-.fab:hover { transform:scale(1.08); }
-.fab.show { display:flex; }
+        /* Content Area */
+        .content {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            padding: 0 20px;
+            overflow-y: auto;
+        }
 
-/* ===== SETTINGS ===== */
-#settings-view { background:#000; align-items:center; justify-content:center; }
-#settings-view p { color:rgba(255,255,255,0.22); font-size:14px; margin-top:14px; }
+        /* List Item Stil 1:1 */
+        .station-card {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 0.5px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
 
-/* ===== MODAL ===== */
-.ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:200; backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; }
-.ov.open { display:flex; }
-.modal { background:#1c1c26; border-radius:26px 26px 0 0; width:100%; max-width:430px; padding:18px; max-height:80vh; overflow-y:auto; }
-.mhd { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-.mt { font-size:15px; font-weight:800; }
-.mc, .ms { padding:7px 18px; border-radius:18px; border:none; font-family:‘Inter’,sans-serif; font-size:12px; font-weight:700; cursor:pointer; }
-.mc { background:rgba(255,255,255,0.08); color:#fff; }
-.ms { background:#FF6B2B; color:#fff; }
-.msec { margin-bottom:14px; }
-.msec h4 { font-size:11px; font-weight:700; color:rgba(255,255,255,0.38); margin-bottom:7px; text-transform:uppercase; letter-spacing:.8px; }
-.mig { background:rgba(255,255,255,0.06); border-radius:14px; overflow:hidden; }
-.mi { width:100%; background:none; border:none; border-bottom:1px solid rgba(255,255,255,0.06); padding:12px 14px; color:#fff; font-family:‘Inter’,sans-serif; font-size:13px; outline:none; }
-.mi:last-child { border-bottom:none; }
-.mi::placeholder { color:rgba(255,255,255,0.28); }
-.vrow { display:flex; align-items:center; gap:10px; background:rgba(255,107,43,.1); border:1.5px solid rgba(255,107,43,.5); border-radius:14px; padding:12px 14px; cursor:pointer; font-size:13px; font-weight:700; color:#FF6B2B; }
-.vnote { font-size:11px; color:rgba(255,255,255,.28); margin-top:7px; line-height:1.5; }
+        .station-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            margin-right: 15px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
 
-/* ===== CTX ===== */
-.ctxov { display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,.68); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
-.ctxov.open { display:flex; }
-.ctxbox { background:#1e1e2c; border-radius:20px; width:280px; overflow:hidden; }
-.ctxr { display:flex; align-items:center; gap:13px; padding:13px 18px; cursor:pointer; font-size:14px; font-weight:500; border-bottom:1px solid rgba(255,255,255,.05); transition:background .1s; }
-.ctxr:last-child { border-bottom:none; }
-.ctxr:hover { background:rgba(255,255,255,.04); }
-.ctxr svg { color:rgba(255,255,255,.42); flex-shrink:0; }
-.ctxr.dim { opacity:.4; }
+        .station-info {
+            flex: 1;
+        }
 
-/* Animations */
-body > audio, body > div:not(.app), body > span { display:none !important; }
-@keyframes wv { 0%,100%{height:3px} 50%{height:13px} }
-.wave { display:inline-flex; align-items:flex-end; gap:2px; height:15px; margin-left:5px; }
-.wave span { display:block; width:3px; border-radius:2px; background:#FF6B2B; animation:wv 1s ease-in-out infinite; }
-.wave span:nth-child(2){animation-delay:.15s} .wave span:nth-child(3){animation-delay:.3s} .wave span:nth-child(4){animation-delay:.1s}
-@keyframes spin { to{transform:rotate(360deg)} }
-.spin { animation:spin .8s linear infinite; display:flex; }
+        .station-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
 
-/* metadata toast */
-.meta-toast { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); background:rgba(30,30,40,0.92); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:7px 16px; font-size:11px; color:rgba(255,255,255,0.8); white-space:nowrap; max-width:90%; overflow:hidden; text-overflow:ellipsis; opacity:0; transition:opacity .4s; pointer-events:none; z-index:5; }
-.meta-toast.show { opacity:1; }
-</style>
+        .station-tags {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
 
+        .station-meta {
+            font-size: 10px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Player View - Ascuns inițial */
+        #player-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .main-art {
+            width: 280px;
+            height: 280px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            object-fit: cover;
+        }
+
+        .player-controls {
+            width: 100%;
+            padding: 0 40px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            width: 40%;
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+        }
+
+        /* Bottom Nav - Glassmorphism */
+        .bottom-nav {
+            position: relative;
+            z-index: 20;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            margin: 20px;
+            border-radius: 40px;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px 20px;
+            border-radius: 30px;
+            transition: 0.3s;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: var(--accent-color);
+        }
+
+        /* Pop-up Menu */
+        .popup-menu {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            width: 240px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            display: none;
+            z-index: 100;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .menu-item {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            border-bottom: 0.5px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+
+        .menu-item:hover { background: rgba(255,255,255,0.1); }
+
+        /* Floating Add Button */
+        .fab {
+            position: absolute;
+            bottom: 100px;
+            right: 30px;
+            background: var(--accent-color);
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(255, 94, 58, 0.4);
+            cursor: pointer;
+            z-index: 15;
+        }
+
+        .heart-icon.active {
+            fill: #ff3b30;
+            color: #ff3b30;
+        }
+    </style>
 </head>
 <body>
-<div class="app">
 
-<!-- ===== PLAYER ===== -->
+<div class="app-container">
+    <div class="dynamic-bg" id="bg-blur"></div>
 
-<div id="player-view" class="view active">
-  <div class="pbg" id="pbg"><div class="pbg-img" id="pbg-img"></div><div class="pbg-overlay" id="pbg-overlay"></div></div>
-  <div class="pc">
-    <div class="art-wrap"><div class="art-svg" id="art"></div></div>
-    <div class="info">
-      <div class="smeta">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        HTTPS &nbsp;–&nbsp;
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="3" height="12"/><rect x="6" y="9" width="3" height="9"/><rect x="11" y="12" width="3" height="6"/><rect x="16" y="4" width="3" height="14"/></svg>
-        <span id="p-codec">AAC</span>&nbsp;–&nbsp;
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="p-bitrate">88 kbps</span>
-      </div>
-      <div class="st-label" id="p-stlabel"></div>
-      <div id="song-block" style="display:none">
-        <div class="s-title" id="s-title"></div>
-        <div class="s-artist" id="s-artist"></div>
-        <div class="s-album" id="s-album"></div>
-      </div>
-      <div id="fallback-block">
-        <div class="st-big" id="p-name"></div>
-        <div class="st-tags" id="p-tags"></div>
-        <div class="st-ctr" id="p-ctr"></div>
-      </div>
+    <div id="list-view" style="height: 100%; display: flex; flex-direction: column;">
+        <div class="tabs">
+            <div class="tab active">Favorites</div>
+            <div class="tab">Recent</div>
+            <div class="tab">Local</div>
+            <div class="tab">All</div>
+        </div>
+        
+        <div class="content" id="station-list">
+            </div>
+
+        <div class="fab" onclick="alert('Add Custom Radio URL')">
+            <i data-lucide="plus"></i>
+        </div>
     </div>
-    <div class="ctrl-row">
-      <button class="ctrl" onclick="prevSt()">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6z"/><polygon points="7,12 18,5 18,19"/></svg>
-      </button>
-      <button class="ctrl-play" id="pbtn" onclick="togglePlay()">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>
-      </button>
-      <button class="ctrl" onclick="nextSt()">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2z"/><polygon points="17,12 6,5 6,19"/></svg>
-      </button>
+
+    <div id="player-view">
+        <img src="" alt="Station Art" class="main-art" id="player-art">
+        <h2 id="player-name">Select a Station</h2>
+        <p id="player-desc" style="color: var(--text-secondary); margin-bottom: 20px;"></p>
+        
+        <div class="player-controls">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <i data-lucide="skip-back" style="opacity: 0.5"></i>
+                <div id="play-btn" style="background: #fff; color: #000; padding: 15px; border-radius: 50%; cursor: pointer;" onclick="toggleAudio()">
+                    <i data-lucide="play" fill="black"></i>
+                </div>
+                <i data-lucide="skip-forward" style="opacity: 0.5"></i>
+            </div>
+            
+            <div style="display: flex; justify-content: space-around; opacity: 0.8;">
+                <i data-lucide="heart" class="heart-icon"></i>
+                <i data-lucide="plus"></i>
+                <i data-lucide="volume-2"></i>
+                <i data-lucide="clock"></i>
+                <i data-lucide="more-horizontal" onclick="toggleMenu()"></i>
+            </div>
+        </div>
     </div>
-    <div class="live-row"><div class="ll"></div><span class="ltag">LIVE</span><div class="ll"></div></div>
-    <div class="act-row">
-      <button class="abt" id="fbtn" onclick="togFavPlayer()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-      </button>
-      <button class="abt" onclick="openAddMod()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
-      <button class="abt">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-      </button>
-      <button class="abt" onclick="showCtx()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-      </button>
+
+    <div class="popup-menu" id="options-menu">
+        <div class="menu-item" onclick="searchYoutube()"><i data-lucide="youtube"></i> Search Song on YouTube</div>
+        <div class="menu-item" onclick="copyInfo()"><i data-lucide="copy"></i> Copy Song Info</div>
+        <div class="menu-item" onclick="openHomepage()"><i data-lucide="globe"></i> Open Station Homepage</div>
     </div>
-    <div class="meta-toast" id="meta-toast"></div>
-  </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="showView('list')">
+            <i data-lucide="radio"></i>
+            <span>Radio</span>
+        </div>
+        <div class="nav-item active" onclick="showView('player')">
+            <i data-lucide="play-circle"></i>
+            <span>Player</span>
+        </div>
+        <div class="nav-item" onclick="alert('Settings')">
+            <i data-lucide="settings"></i>
+            <span>Settings</span>
+        </div>
+    </div>
 </div>
 
-<!-- ===== RADIO VIEW ===== -->
-
-<div id="radio-view" class="view">
-  <div class="rtop">
-    <div class="tscroll">
-      <button class="ttab" onclick="setTab(this,'recent')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recent</button>
-      <button class="ttab active" onclick="setTab(this,'favorites')"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Favorites</button>
-      <button class="ttab" onclick="setTab(this,'my')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>My</button>
-      <button class="ttab" onclick="setTab(this,'local')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Local</button>
-      <button class="ttab" onclick="setTab(this,'all')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>All</button>
-    </div>
-    <div class="sscroll">
-      <button class="sbtn" onclick="setSort(this)">A A-Z</button>
-      <button class="sbtn active" onclick="setSort(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="6" width="3" height="12"/><rect x="6" y="9" width="3" height="9"/><rect x="11" y="12" width="3" height="6"/><rect x="16" y="4" width="3" height="14"/></svg>Frequency ▾</button>
-      <button class="sbtn" onclick="setSort(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Duration</button>
-    </div>
-    <div class="swrap">
-      <div class="sbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search radio station..." oninput="filterSt(this.value)"></div>
-      <div class="cbadge" id="cbadge">2</div>
-    </div>
-  </div>
-  <div class="stlist" id="stlist"></div>
-  <button class="fab" id="fab" onclick="openAddMod()">+</button>
-</div>
-
-<!-- ===== SETTINGS ===== -->
-
-<div id="settings-view" class="view">
-  <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  <p>Settings</p>
-</div>
-
-<!-- BOTTOM NAV -->
-
-<div class="bnav">
-  <button class="nbtn active" id="nav-player" onclick="showView('player')"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Player</button>
-  <button class="nbtn" id="nav-radio" onclick="showView('radio')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="11" rx="10" ry="7"/><circle cx="12" cy="11" r="3"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>Radio</button>
-  <button class="nbtn" id="nav-settings" onclick="showView('settings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
-</div>
-</div>
-
-<!-- CTX -->
-
-<div class="ctxov" id="ctxov" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="ctxbox">
-    <div class="ctxr"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5C2 5.47 4.47 3 7.5 3h9C19.53 3 22 5.47 22 8.5v7c0 3.03-2.47 5.5-5.5 5.5h-9C4.47 21 2 18.53 2 15.5v-7z"/><circle cx="12" cy="12" r="3"/></svg>AirPlay</div>
-    <div class="ctxr"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share Radio Station</div>
-    <div class="ctxr"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Open Radio Station Homepage</div>
-    <div class="ctxr dim"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Share Song</div>
-    <div class="ctxr dim"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>Open Song in Apple Music</div>
-    <div class="ctxr dim"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Search Song on YouTube</div>
-    <div class="ctxr dim"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Song Info</div>
-    <div class="ctxr"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Report Streaming Problem</div>
-  </div>
-</div>
-
-<!-- ADD MODAL -->
-
-<div class="ov" id="addov">
-  <div class="modal">
-    <div class="mhd"><button class="mc" onclick="closeAddMod()">Cancel</button><span class="mt">Add Radio Station</span><button class="ms" onclick="saveSt()">Save</button></div>
-    <div class="msec"><h4>Required</h4><div class="mig"><input class="mi" id="nn" type="text" placeholder="Radio Station Name"><input class="mi" id="nu" type="text" placeholder="Stream URL"></div></div>
-    <div class="msec"><h4>Optional</h4><div class="mig">
-      <input class="mi" id="nh" type="text" placeholder="Homepage URL">
-      <input class="mi" id="nf" type="text" placeholder="Favicon URL">
-      <input class="mi" id="nc" type="text" placeholder="Country">
-      <input class="mi" id="nco" type="text" placeholder="Codec">
-      <input class="mi" id="nb" type="text" placeholder="Bitrate (kbps)">
-      <input class="mi" id="nt" type="text" placeholder="Tags (comma separated)">
-      <input class="mi" id="ncr" type="text" placeholder="Credits">
-    </div></div>
-    <div class="msec"><h4>Validation</h4>
-      <div class="vrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Validate Stream</div>
-      <p class="vnote">Validates that the stream URL is accessible and returns audio content.</p>
-    </div>
-  </div>
-</div>
+<audio id="radio-audio"></audio>
 
 <script>
-// ===================== SVG LOGOS =====================
-const ONE_FM = `<img src="https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg" style="width:100%;height:100%;object-fit:contain;border-radius:18px;background:#000">`;
-const HEART_10S = `<img src="https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png" style="width:100%;height:100%;object-fit:cover;border-radius:18px">`;
+    const stations = [
+        {
+            name: "ONE FM DANCE STATION",
+            url: "https://live.onefm.ro/onefm.aacp",
+            img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg",
+            desc: "DANCE, ELECTRONIC, HOUSE, TECHNO",
+            country: "ROMANIA",
+            meta: "HTTPS • AAC • 88 kbps"
+        },
+        {
+            name: "HEART 10S",
+            url: "https://media-ice.musicradio.com/Heart10sMP3",
+            img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png",
+            desc: "POP, HITS, CHART, 80S, 90S",
+            country: "UNITED KINGDOM",
+            meta: "HTTPS • MP3 • 128 kbps"
+        }
+    ];
 
-// ===================== DATA =====================
-const stations = [
-  { id:'one-fm',    name:'One FM Dance Station', dname:'ONE FM DANCE STATION', country:'Romania',        tags:'DANCE, ELECTRONIC, HOUSE, TECHNO, POP', codec:'AAC', bitrate:'88 kbps',  url:'https://live.onefm.ro/onefm.aacp',             svg:ONE_FM,    bgImg:'https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg',                                                              listbg:'#1a3aaa', bg:'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.3) 0%, rgba(0,0,10,0.85) 60%, #000 100%)', fav:true },
-  { id:'heart-10s', name:'Heart 10s',            dname:'HEART 10S',            country:'United Kingdom', tags:'POP, HITS, CHART, 80S, 90S',            codec:'MP3', bitrate:'128 kbps', url:'https://media-ice.musicradio.com/Heart10sMP3',  svg:HEART_10S, bgImg:'https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png', listbg:'#1a0a0a', bg:'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.3) 0%, rgba(10,0,0,0.85) 60%, #000 100%)', fav:true },
-];
-let custom=[], curIdx=0, playing=false, loading=false, curTab='favorites', srch='';
-let icyPlayer=null, icyFallback=(typeof IcecastMetadataPlayer==='undefined');
-let currentVolume=0.8, toastTimer=null;
+    let currentStation = null;
+    const audio = document.getElementById('radio-audio');
 
-function onMetadata(meta) {
-  const raw = meta.StreamTitle || meta.TITLE || '';
-  if (!raw) return;
-  updateSongUI(raw);
-}
-function updateSongUI(raw) {
-  const parts = raw.split(' - ');
-  const title  = parts.length >= 2 ? parts.slice(1).join(' - ').trim() : raw.trim();
-  const artist = parts.length >= 2 ? parts[0].trim() : '';
-  const s = allSt()[curIdx];
-  document.getElementById('p-stlabel').textContent = s.name;
-  document.getElementById('fallback-block').style.display = 'none';
-  document.getElementById('song-block').style.display = 'block';
-  document.getElementById('s-title').textContent = title;
-  document.getElementById('s-artist').textContent = artist;
-  document.getElementById('s-album').textContent = raw;
-  showToast('🎵 ' + raw);
-  renderList();
-}
-function showToast(msg) {
-  const t = document.getElementById('meta-toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
-}
-function clearSongUI() {
-  const s = allSt()[curIdx];
-  document.getElementById('p-stlabel').textContent = '';
-  document.getElementById('song-block').style.display = 'none';
-  document.getElementById('fallback-block').style.display = 'block';
-  document.getElementById('p-name').textContent = s.dname;
-  document.getElementById('p-tags').textContent = s.tags;
-  document.getElementById('p-ctr').textContent = s.country.toUpperCase();
-}
-
-// ===================== PLAYER =====================
-function allSt() { return [...stations, ...custom]; }
-function loadSt(i) {
-  const a = allSt();
-  if (i < 0 || i >= a.length) return;
-  curIdx = i;
-  const s = a[i];
-  document.getElementById('pbg-img').style.backgroundImage = s.bgImg ? `url(${s.bgImg})` : 'none';
-  document.getElementById('pbg-overlay').style.background = s.bg || 'rgba(0,0,0,0.8)';
-  document.getElementById('art').innerHTML = s.svg || '';
-  document.getElementById('p-codec').textContent = s.codec;
-  document.getElementById('p-bitrate').textContent = s.bitrate;
-  document.getElementById('fbtn').classList.toggle('fav-on', !!s.fav);
-  clearSongUI();
-  playing = false; setIcon(false);
-  if (icyPlayer && icyPlayer.stop) { try { icyPlayer.stop(); } catch(e){} }
-  icyPlayer = null;
-  startPlay(s);
-}
-function startPlay(s) {
-  loading = true; setLoad();
-  if (!icyFallback && typeof IcecastMetadataPlayer !== 'undefined') {
-    try {
-      icyPlayer = new IcecastMetadataPlayer(s.url, {
-        onMetadata,
-        onPlay: () => { playing=true; loading=false; setIcon(true); },
-        onStop: () => { playing=false; setIcon(false); },
-        onError: (e) => { icyFallback=true; fallbackPlay(s); },
-        metadataTypes: ['icy'], icyDetectionTimeout: 2000,
-      });
-      icyPlayer.volume = currentVolume;
-      icyPlayer.play().catch(() => { icyFallback=true; icyPlayer=null; fallbackPlay(s); });
-    } catch(e) { icyFallback=true; fallbackPlay(s); }
-  } else { fallbackPlay(s); }
-}
-let fallbackAud = null;
-function fallbackPlay(s) {
-  if (fallbackAud) { fallbackAud.pause(); fallbackAud.src=''; }
-  fallbackAud = new Audio();
-  fallbackAud.crossOrigin = 'anonymous';
-  fallbackAud.volume = currentVolume;
-  fallbackAud.src = s.url;
-  fallbackAud.addEventListener('playing', () => { playing=true; loading=false; setIcon(true); });
-  fallbackAud.addEventListener('waiting', () => { loading=true; setLoad(); });
-  fallbackAud.addEventListener('error',   () => { loading=false; playing=false; setIcon(false); showToast('⚠️ Stream error'); });
-  fallbackAud.addEventListener('pause',   () => { playing=false; setIcon(false); });
-  fallbackAud.play().catch(() => { loading=false; setIcon(false); });
-  pollRadioBrowser(s);
-}
-async function pollRadioBrowser(s) {
-  try {
-    const name = encodeURIComponent(s.name);
-    const res  = await fetch(`https://de1.api.radio-browser.info/json/stations/byname/${name}?limit=1`, { signal: AbortSignal.timeout(5000) });
-    const data = await res.json();
-    if (data && data[0] && data[0].homepage) tryIcecastStatus(data[0].homepage, s);
-  } catch(e) {}
-}
-async function tryIcecastStatus(homepage, s) {
-  try {
-    const url       = new URL(s.url);
-    const statusUrl = `${url.protocol}//${url.host}/status-json.xsl`;
-    const res  = await fetch(statusUrl, { signal: AbortSignal.timeout(4000) });
-    const json = await res.json();
-    const sources = json?.icestats?.source;
-    if (!sources) return;
-    const src   = Array.isArray(sources) ? sources[0] : sources;
-    const title = src?.title || src?.yp_currently_playing;
-    if (title) {
-      updateSongUI(title);
-      setTimeout(() => { if (allSt()[curIdx]?.id === s.id && playing) tryIcecastStatus(homepage, s); }, 15000);
+    function init() {
+        const listContainer = document.getElementById('station-list');
+        stations.forEach((s, index) => {
+            const card = document.createElement('div');
+            card.className = 'station-card';
+            card.innerHTML = `
+                <img src="${s.img}" class="station-img">
+                <div class="station-info">
+                    <div class="station-name">${s.name}</div>
+                    <div class="station-tags">${s.desc}</div>
+                    <div class="station-meta"><span>${s.country}</span> <span>${s.meta}</span></div>
+                </div>
+                <i data-lucide="heart" style="color: var(--accent-color)"></i>
+            `;
+            card.onclick = () => selectStation(index);
+            listContainer.appendChild(card);
+        });
+        lucide.createIcons();
+        // Seteaza prima statie default
+        selectStation(0, false);
     }
-  } catch(e) {}
-}
-function togglePlay() {
-  if (loading) return;
-  if (playing) {
-    if (icyPlayer && icyPlayer.stop) icyPlayer.stop();
-    if (fallbackAud) fallbackAud.pause();
-    playing=false; setIcon(false);
-  } else {
-    if (icyPlayer && icyPlayer.play) {
-      loading=true; setLoad();
-      icyPlayer.play().catch(() => { loading=false; setIcon(false); });
-    } else if (fallbackAud) {
-      loading=true; setLoad();
-      fallbackAud.play().catch(() => { loading=false; setIcon(false); });
-    } else { loadSt(curIdx); }
-  }
-}
-function setIcon(p) {
-  document.getElementById('pbtn').innerHTML = p
-    ? `<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>`
-    : `<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
-}
-function setLoad() {
-  document.getElementById('pbtn').innerHTML = `<div class="spin"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>`;
-}
-function prevSt() { loadSt((curIdx - 1 + allSt().length) % allSt().length); }
-function nextSt() { loadSt((curIdx + 1) % allSt().length); }
-function togFavPlayer() {
-  const s = allSt()[curIdx]; s.fav = !s.fav;
-  document.getElementById('fbtn').classList.toggle('fav-on', s.fav);
-  renderList();
-}
 
-// ===================== VIEWS =====================
-function showView(v) {
-  document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.nbtn').forEach(e => e.classList.remove('active'));
-  document.getElementById(v+'-view').classList.add('active');
-  document.getElementById('nav-'+v).classList.add('active');
-  if (v === 'radio') renderList();
-}
-function setTab(el, tab) {
-  curTab = tab;
-  document.querySelectorAll('.ttab').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('fab').classList.toggle('show', tab==='my');
-  renderList();
-}
-function setSort(el) { document.querySelectorAll('.sbtn').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
-function filterSt(q) { srch = q.toLowerCase(); renderList(); }
-function renderList() {
-  const el=document.getElementById('stlist'), badge=document.getElementById('cbadge');
-  let items = allSt();
-  if (curTab==='favorites') items = items.filter(s=>s.fav);
-  else if (curTab==='my')   items = [...custom];
-  else if (curTab==='recent') items = [...allSt()].reverse().slice(0,5);
-  else if (curTab==='local')  items = items.filter(s=>s.country==='Romania');
-  if (srch) items = items.filter(s=>s.name.toLowerCase().includes(srch)||(s.tags||'').toLowerCase().includes(srch)||(s.country||'').toLowerCase().includes(srch));
-  badge.textContent = items.length;
-  let html = '';
-  if (curTab==='my') {
-    html += `<div class="myhd"><div class="myhd-l"><h3>Your Radio Stations</h3><p>Add your own radio streams</p></div><div class="mycnt">${custom.length}/15<small>stations</small></div></div>`;
-  }
-  if (!items.length) { html += `<div style="text-align:center;padding:50px 0;color:rgba(255,255,255,0.22);font-size:13px">No stations found</div>`; }
-  items.forEach(s => {
-    const gi=allSt().indexOf(s), isNow=gi===curIdx;
-    const logo=`<div class="stlogo" style="background:${s.listbg||'#1a1a2e'}">${s.svg||''}</div>`;
-    const wave=isNow?`<span class="wave"><span></span><span></span><span></span><span></span></span>`:'';
-    const nowPlaying=isNow&&document.getElementById('s-title').textContent
-      ?`<div style="font-size:10px;color:#FF6B2B;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">▶ ${document.getElementById('s-title').textContent}</div>`:'';
-    html += `<div class="sti" onclick="pickSt(${gi})">${logo}<div class="stinfo"><div class="stname" style="${isNow?'color:#FF6B2B':''}">${s.name}${wave}</div><div class="stctr">${s.country}</div><div class="sttags">${s.tags}</div>${nowPlaying}<div class="sttech"><span>🔒 HTTPS</span><span>📶 ${s.codec}</span><span>⏱ ${s.bitrate}</span>${s.custom?'<span style="color:#4CAF50">✔</span>':''}</div></div><button class="stfav${s.fav?' on':''}" onclick="togFavList(event,${gi})"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button></div>`;
-  });
-  el.innerHTML = html;
-}
-function pickSt(i) { loadSt(i); showView('player'); }
-function togFavList(e,i) { e.stopPropagation(); allSt()[i].fav=!allSt()[i].fav; if(i===curIdx) document.getElementById('fbtn').classList.toggle('fav-on',allSt()[i].fav); renderList(); }
-function showCtx() { document.getElementById('ctxov').classList.add('open'); }
-function openAddMod() { document.getElementById('addov').classList.add('open'); }
-function closeAddMod() { document.getElementById('addov').classList.remove('open'); }
-function saveSt() {
-  const name=document.getElementById('nn').value.trim(), url=document.getElementById('nu').value.trim();
-  if (!name||!url) { alert('Completează Numele și URL-ul!'); return; }
-  const codec=document.getElementById('nco').value||'AAC';
-  const bitrate=(document.getElementById('nb').value||'128')+' kbps';
-  const country=document.getElementById('nc').value||'Unknown';
-  const tags=document.getElementById('nt').value||'';
-  const i=name.slice(0,3).toUpperCase();
-  const cSVG=`<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"><circle cx="150" cy="150" r="149" fill="#1a2a3a"/><text x="150" y="170" text-anchor="middle" font-size="80" fill="white" font-family="Arial Black,sans-serif" font-weight="900">${i}</text></svg>`;
-  custom.push({ id:'c'+Date.now(), name, dname:name.toUpperCase(), country, tags, codec, bitrate, url, svg:cSVG, listbg:'#1a2a3a', bg:'radial-gradient(ellipse at 50% 15%, #1a2a3a 0%, #060810 100%)', fav:true, custom:true });
-  closeAddMod();
-  ['nn','nu','nh','nf','nc','nco','nb','nt','ncr'].forEach(id=>document.getElementById(id).value='');
-  renderList();
-}
-// ===================== SAFARI FIX =====================
-function fixVH() { document.querySelector('.app').style.height=window.innerHeight+'px'; }
-fixVH();
-window.addEventListener('resize', fixVH);
-window.addEventListener('orientationchange', ()=>setTimeout(fixVH,200));
-// ===================== INIT =====================
-setTimeout(() => { icyFallback=(typeof IcecastMetadataPlayer==='undefined'); loadSt(0); }, 200);
+    function selectStation(index, autoPlay = true) {
+        currentStation = stations[index];
+        document.getElementById('player-art').src = currentStation.img;
+        document.getElementById('bg-blur').style.backgroundImage = `url(${currentStation.img})`;
+        document.getElementById('player-name').innerText = currentStation.name;
+        document.getElementById('player-desc').innerText = currentStation.desc;
+        
+        audio.src = currentStation.url;
+        if(autoPlay) {
+            audio.play();
+            updatePlayIcon(true);
+            showView('player');
+        }
+    }
+
+    function toggleAudio() {
+        if (audio.paused) {
+            audio.play();
+            updatePlayIcon(true);
+        } else {
+            audio.pause();
+            updatePlayIcon(false);
+        }
+    }
+
+    function updatePlayIcon(isPlaying) {
+        const btn = document.getElementById('play-btn');
+        btn.innerHTML = isPlaying ? '<i data-lucide="pause" fill="black"></i>' : '<i data-lucide="play" fill="black"></i>';
+        lucide.createIcons();
+    }
+
+    function showView(view) {
+        document.getElementById('list-view').style.display = view === 'list' ? 'flex' : 'none';
+        document.getElementById('player-view').style.display = view === 'player' ? 'flex' : 'none';
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems[0].classList.toggle('active', view === 'list');
+        navItems[1].classList.toggle('active', view === 'player');
+    }
+
+    function toggleMenu() {
+        const menu = document.getElementById('options-menu');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Functii pentru meniu
+    function searchYoutube() {
+        window.open(`https://www.youtube.com/results?search_query=${currentStation.name}`, '_blank');
+    }
+
+    function copyInfo() {
+        navigator.clipboard.writeText(`${currentStation.name} - ${currentStation.desc}`);
+        alert("Info copied to clipboard!");
+    }
+
+    function openHomepage() {
+        alert("Redirecting to homepage...");
+    }
+
+    init();
 </script>
 
 </body>
