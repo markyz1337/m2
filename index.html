@@ -1,411 +1,339 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Radio Player Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        :root {
-            --accent: #ff5e3a;
-            --glass: rgba(255, 255, 255, 0.1);
-            --bg-dark: #000000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Radio Player Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Inter', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        
-        body { 
-            background: var(--bg-dark); 
-            color: white; 
-            height: 100dvh; /* Înălțime dinamică pentru mobil */
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-        }
+<style>
+:root {
+    --accent: #ff5e3a;
+    --glass: rgba(255, 255, 255, 0.1);
+    --bg-dark: #000000;
+}
 
-        .app-container {
-            width: 100%; 
-            max-width: 430px; 
-            height: 100%;
-            position: relative; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column;
-            /* Respectă zona de jos a iPhone-ului */
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+* { 
+    box-sizing: border-box; 
+    margin: 0; padding: 0; 
+    font-family: 'Inter', sans-serif; 
+    -webkit-tap-highlight-color: transparent; 
+}
 
-        /* Fundal dinamic blurat și rotit */
-        .bg-blur {
-            position: absolute; 
-            top: -25%; 
-            left: -25%; 
-            width: 150%; 
-            height: 150%;
-            background-size: cover; 
-            background-position: center;
-            filter: blur(70px) brightness(0.4);
-            transform: rotate(30deg);
-            transition: background-image 0.8s ease-in-out;
-            z-index: 0;
-        }
+body { 
+    background: var(--bg-dark); 
+    color: white; 
+    height: 100dvh; 
+    overflow: hidden; 
+    display: flex; 
+    justify-content: center; 
+}
 
-        /* Navigația de sus (Tab-uri) */
-        .header-tabs {
-            position: relative; 
-            z-index: 10; 
-            padding: 20px 20px 10px 20px; 
-            display: flex; 
-            gap: 10px; 
-            overflow-x: auto;
-        }
-        .tab {
-            background: var(--glass); 
-            padding: 8px 18px; 
-            border-radius: 20px; 
-            font-size: 13px;
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .tab.active { background: var(--accent); border-color: transparent; }
+/* SMOOTH GLOBAL */
+* {
+    transition: all 0.25s ease;
+}
 
-        /* Lista de stații */
-        .content { 
-            position: relative; 
-            z-index: 10; 
-            flex: 1; 
-            padding: 0 20px 140px 20px; /* Spațiu mare jos pentru a nu fi acoperit de meniu */
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-        }
+.app-container {
+    width: 100%; max-width: 430px; height: 100%;
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+}
 
-        .station-item {
-            display: flex; 
-            align-items: center; 
-            padding: 15px 0;
-            border-bottom: 0.5px solid rgba(255,255,255,0.1); 
-            cursor: pointer;
-        }
-        .station-thumb { 
-            width: 55px; 
-            height: 55px; 
-            border-radius: 12px; 
-            margin-right: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-            object-fit: cover;
-        }
-        .station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-        .station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; letter-spacing: 0.5px; }
+.bg-blur {
+    position: absolute; top: -25%; left: -25%; width: 150%; height: 150%;
+    background-size: cover; background-position: center;
+    filter: blur(70px) brightness(0.4);
+    transform: rotate(30deg) scale(1);
+    transition: background-image 0.8s ease-in-out, transform 1.5s ease;
+    z-index: 0;
+}
 
-        /* Vedere Player */
-        #player-view {
-            display: none; 
-            position: relative; 
-            z-index: 10; 
-            height: 100%;
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px 40px 100px 40px;
-        }
-        .main-art {
-            width: 85%; 
-            aspect-ratio: 1/1; 
-            border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
-            object-fit: cover; 
-            margin-bottom: 30px;
-        }
-        .track-info { text-align: center; margin-bottom: 30px; }
-        .track-info h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
-        .track-info p { color: #b3b3b3; font-size: 14px; }
+/* subtle zoom when changing */
+.bg-blur.active {
+    transform: rotate(30deg) scale(1.1);
+}
 
-        /* Controalele principale (Next/Prev acum funcționale) */
-        .main-controls { 
-            display: flex; 
-            align-items: center; 
-            gap: 30px; 
-            margin-bottom: 40px; 
-        }
-        .btn-round {
-            background: var(--glass); 
-            width: 55px; 
-            height: 55px; 
-            border-radius: 50%;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer;
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-        }
-        .btn-play { 
-            background: #fff; 
-            color: #000; 
-            width: 70px; 
-            height: 70px; 
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
-        }
-        .btn-play.playing { background: var(--accent); color: #fff; }
+/* HEADER */
+.header-tabs {
+    position: relative; z-index: 10; padding: 20px 20px 10px 20px; display: flex; gap: 10px; overflow-x: auto;
+}
 
-        .secondary-controls { 
-            display: flex; 
-            width: 100%; 
-            justify-content: space-between; 
-            padding: 0 10px; 
-            opacity: 0.8; 
-        }
-        .icon-btn { cursor: pointer; padding: 5px; }
+.tab {
+    background: var(--glass); padding: 8px 18px; border-radius: 20px; font-size: 13px;
+    backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+    white-space: nowrap;
+}
 
-        /* Meniu Popup (Stil iOS) */
-        .popup {
-            position: absolute; 
-            bottom: calc(100px + env(safe-area-inset-bottom)); 
-            right: 20px; 
-            width: 240px;
-            background: rgba(25, 25, 25, 0.95); 
-            backdrop-filter: blur(25px);
-            border-radius: 18px; 
-            display: none; 
-            z-index: 100; 
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
-            overflow: hidden;
-        }
-        .menu-item {
-            padding: 14px 18px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px;
-            font-size: 14px; 
-            border-bottom: 0.5px solid rgba(255,255,255,0.05); 
-            cursor: pointer;
-        }
-        .menu-item:active { background: rgba(255,255,255,0.1); }
+.tab.active { 
+    background: var(--accent); 
+    border-color: transparent; 
+    transform: scale(1.05);
+}
 
-        /* Navigația de jos - Fixată deasupra barei de sistem */
-        .nav-bar {
-            position: absolute;
-            bottom: calc(15px + env(safe-area-inset-bottom));
-            left: 20px;
-            right: 20px;
-            z-index: 50; 
-            background: rgba(20,20,20,0.85);
-            backdrop-filter: blur(25px); 
-            border-radius: 35px;
-            display: flex; 
-            justify-content: space-around; 
-            padding: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .nav-link {
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 4px;
-            padding: 8px 25px; 
-            border-radius: 25px; 
-            color: #777; 
-            cursor: pointer; 
-            font-size: 11px;
-            transition: all 0.3s;
-        }
-        .nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
-        .nav-link.active i { color: var(--accent); }
+/* CONTENT */
+.content { 
+    position: relative; z-index: 10; flex: 1; 
+    padding: 0 20px 140px 20px; 
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch;
+}
 
-        /* Butonul Floating Plus */
-        .fab {
-            position: absolute; 
-            bottom: calc(100px + env(safe-area-inset-bottom)); 
-            right: 25px; 
-            background: var(--accent);
-            width: 56px; 
-            height: 56px; 
-            border-radius: 50%; 
-            display: flex;
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 8px 20px rgba(255, 94, 58, 0.4);
-            cursor: pointer; 
-            z-index: 15;
-        }
-    </style>
+/* STATION ITEM */
+.station-item {
+    display: flex; align-items: center; padding: 15px 0;
+    border-bottom: 0.5px solid rgba(255,255,255,0.1); cursor: pointer;
+    transform: translateY(10px);
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+}
+
+.station-item:hover {
+    transform: scale(1.02);
+}
+
+.station-item:active {
+    transform: scale(0.97);
+}
+
+@keyframes fadeUp {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.station-thumb { 
+    width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); object-fit: cover; 
+}
+
+.station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* PLAYER */
+#player-view {
+    display: none; position: relative; z-index: 10; height: 100%;
+    flex-direction: column; align-items: center; justify-content: center; padding: 20px 40px 100px 40px;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+#player-view.show {
+    display: flex;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+#list-view.hide {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+/* COVER */
+.main-art {
+    width: 85%; aspect-ratio: 1/1; border-radius: 25px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6); object-fit: cover; margin-bottom: 30px;
+    transition: transform 0.5s ease;
+}
+
+.main-art.playing {
+    transform: scale(1.03);
+}
+
+/* TEXT */
+.track-info { text-align: center; margin-bottom: 30px; }
+.track-info h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+.track-info p { color: #b3b3b3; font-size: 14px; }
+
+/* CONTROLS */
+.main-controls { display: flex; align-items: center; gap: 30px; margin-bottom: 20px; }
+
+.btn-round {
+    background: var(--glass); width: 55px; height: 55px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); color: white;
+}
+
+.btn-round:hover {
+    transform: scale(1.1);
+}
+
+.btn-round:active {
+    transform: scale(0.9);
+}
+
+.btn-play { background: #fff; color: #000; width: 70px; height: 70px; }
+.btn-play.playing { background: var(--accent); color: #fff; }
+
+/* NAV */
+.nav-bar {
+    position: absolute; bottom: calc(15px + env(safe-area-inset-bottom));
+    left: 20px; right: 20px; z-index: 50; 
+    background: rgba(20,20,20,0.85); backdrop-filter: blur(25px); 
+    border-radius: 35px; display: flex; justify-content: space-around; padding: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.nav-link {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 25px; border-radius: 25px; color: #777; cursor: pointer; font-size: 11px;
+}
+
+.nav-link.active { 
+    color: #fff; 
+    background: rgba(255,255,255,0.08); 
+    transform: scale(1.05);
+}
+
+.nav-link.active i { color: var(--accent); }
+
+/* FAB */
+.fab {
+    position: absolute; bottom: calc(100px + env(safe-area-inset-bottom)); 
+    right: 25px; background: var(--accent); width: 56px; height: 56px; border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; 
+    box-shadow: 0 8px 20px rgba(255, 94, 58, 0.4); cursor: pointer; z-index: 15;
+}
+
+.fab:hover { transform: scale(1.1); }
+.fab:active { transform: scale(0.9); }
+
+</style>
 </head>
+
 <body>
 
 <div class="app-container">
-    <div class="bg-blur" id="dynamic-bg"></div>
+<div class="bg-blur" id="dynamic-bg"></div>
 
-    <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
-        <div class="header-tabs">
-            <div class="tab active">Favorites</div>
-            <div class="tab">Recent</div>
-            <div class="tab">Local</div>
-            <div class="tab">All</div>
-        </div>
-        <div class="content" id="stations-list"></div>
-        <div class="fab" onclick="alert('Add Custom Station')">
-            <i data-lucide="plus"></i>
-        </div>
+<div id="list-view" style="height:100%; display:flex; flex-direction:column;">
+    <div class="header-tabs">
+        <div class="tab active">Favorites</div>
+        <div class="tab">Recent</div>
+        <div class="tab">Local</div>
+        <div class="tab">All</div>
+    </div>
+    <div class="content" id="stations-list"></div>
+    <div class="fab" onclick="alert('Add Custom Station')"><i data-lucide="plus"></i></div>
+</div>
+
+<div id="player-view">
+    <img src="" class="main-art" id="player-img">
+    <div class="track-info">
+        <h2 id="station-title">Select Station</h2>
+        <p id="station-sub">Tap a station to start</p>
     </div>
 
-    <div id="player-view">
-        <img src="" class="main-art" id="player-img">
-        <div class="track-info">
-            <h2 id="station-title">Select Station</h2>
-            <p id="station-sub">Tap a station to start</p>
-        </div>
-
-        <div class="main-controls">
-            <div class="btn-round" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
-            <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
-            <div class="btn-round" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
-        </div>
-
-        <div class="secondary-controls">
-            <i data-lucide="heart" class="icon-btn"></i>
-            <i data-lucide="plus" class="icon-btn"></i>
-            <i data-lucide="volume-2" class="icon-btn"></i>
-            <i data-lucide="clock" class="icon-btn"></i>
-            <i data-lucide="more-horizontal" class="icon-btn" onclick="togglePopup()"></i>
-        </div>
+    <div class="main-controls">
+        <div class="btn-round" onclick="prev()"><i data-lucide="skip-back"></i></div>
+        <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play"></i></div>
+        <div class="btn-round" onclick="next()"><i data-lucide="skip-forward"></i></div>
     </div>
+</div>
 
-    <div class="popup" id="menu-popup">
-        <div class="menu-item"><i data-lucide="share" size="18"></i> Share Radio Station</div>
-        <div class="menu-item" onclick="searchYoutube()"><i data-lucide="youtube" size="18"></i> Search on YouTube</div>
-        <div class="menu-item" onclick="copyInfo()"><i data-lucide="copy" size="18"></i> Copy Song Info</div>
-        <div class="menu-item" style="color: #ff3b30;"><i data-lucide="alert-triangle" size="18"></i> Report Problem</div>
+<div class="nav-bar">
+    <div class="nav-link active" id="nav-list" onclick="switchTab('list')">
+        <i data-lucide="radio"></i><span>Radio</span>
     </div>
-
-    <div class="nav-bar">
-        <div class="nav-link active" id="nav-list" onclick="switchTab('list')">
-            <i data-lucide="radio"></i><span>Radio</span>
-        </div>
-        <div class="nav-link" id="nav-player" onclick="switchTab('player')">
-            <i data-lucide="play-circle"></i><span>Player</span>
-        </div>
-        <div class="nav-link" onclick="alert('Settings')">
-            <i data-lucide="settings"></i><span>Settings</span>
-        </div>
+    <div class="nav-link" id="nav-player" onclick="switchTab('player')">
+        <i data-lucide="play-circle"></i><span>Player</span>
     </div>
+    <div class="nav-link" onclick="alert('Settings')">
+        <i data-lucide="settings"></i><span>Settings</span>
+    </div>
+</div>
 </div>
 
 <audio id="audio-engine"></audio>
 
 <script>
-    const stations = [
-        {
-            name: "ONE FM DANCE STATION",
-            stream: "https://live.onefm.ro/onefm.aacp",
-            img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg",
-            desc: "DANCE, ELECTRONIC, HOUSE, TECHNO"
-        },
-        {
-            name: "HEART 10S",
-            stream: "https://media-ice.musicradio.com/Heart10sMP3",
-            img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png",
-            desc: "POP, HITS, CHART, 80S, 90S"
-        }
-    ];
+const stations = [
+    { name: "ONE FM DANCE STATION", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, ELECTRONIC, HOUSE, TECHNO" },
+    { name: "HEART 10S", stream: "https://media-ice.musicradio.com/Heart10sMP3", img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", desc: "POP, HITS, CHART, 80S, 90S" }
+];
 
-    let currentIdx = 0;
-    const audio = document.getElementById('audio-engine');
+let currentIdx = 0;
+const audio = document.getElementById('audio-engine');
 
-    function init() {
-        const list = document.getElementById('stations-list');
-        stations.forEach((s, i) => {
-            const item = document.createElement('div');
-            item.className = 'station-item';
-            item.innerHTML = `
-                <img src="${s.img}" class="station-thumb">
-                <div style="flex:1">
-                    <div class="station-name">${s.name}</div>
-                    <div class="station-desc">${s.desc}</div>
-                </div>
-                <i data-lucide="heart" size="18" color="#ff5e3a" fill="#ff5e3a"></i>
-            `;
-            item.onclick = () => { currentIdx = i; playStation(); };
-            list.appendChild(item);
-        });
-        lucide.createIcons();
-        loadStation(0); 
+function init() {
+    const list = document.getElementById('stations-list');
+    stations.forEach((s, i) => {
+        const item = document.createElement('div');
+        item.className = 'station-item';
+        item.style.animationDelay = (i * 0.05) + "s";
+        item.innerHTML = `<img src="${s.img}" class="station-thumb"><div style="flex:1"><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>`;
+        item.onclick = () => { currentIdx = i; playStation(); };
+        list.appendChild(item);
+    });
+    lucide.createIcons();
+    loadStation(0); 
+}
+
+function loadStation(i) {
+    const s = stations[i];
+    document.getElementById('player-img').src = s.img;
+    document.getElementById('dynamic-bg').style.backgroundImage = `url(${s.img})`;
+    document.getElementById('dynamic-bg').classList.add('active');
+    setTimeout(()=>document.getElementById('dynamic-bg').classList.remove('active'),500);
+    document.getElementById('station-title').innerText = s.name;
+    document.getElementById('station-sub').innerText = s.desc;
+    audio.src = s.stream;
+}
+
+function playStation() {
+    loadStation(currentIdx);
+    audio.play().catch(e => console.log(e));
+    updateUI(true);
+    switchTab('player');
+}
+
+function togglePlay() {
+    if (audio.paused) { audio.play(); updateUI(true); }
+    else { audio.pause(); updateUI(false); }
+}
+
+function updateUI(isPlaying) {
+    const btn = document.getElementById('play-trigger');
+    const art = document.getElementById('player-img');
+
+    btn.innerHTML = isPlaying ? '<i data-lucide="pause"></i>' : '<i data-lucide="play"></i>';
+    btn.classList.toggle('playing', isPlaying);
+    art.classList.toggle('playing', isPlaying);
+
+    lucide.createIcons();
+}
+
+function next() { currentIdx = (currentIdx + 1) % stations.length; playStation(); }
+function prev() { currentIdx = (currentIdx - 1 + stations.length) % stations.length; playStation(); }
+
+function switchTab(view) {
+    const list = document.getElementById('list-view');
+    const player = document.getElementById('player-view');
+
+    if(view === 'player'){
+        list.classList.add('hide');
+        setTimeout(()=> list.style.display='none', 250);
+        player.style.display = 'flex';
+        player.classList.add('show');
+    } else {
+        list.style.display='flex';
+        list.classList.remove('hide');
+        player.style.display='none';
     }
 
-    function loadStation(i) {
-        const s = stations[i];
-        document.getElementById('player-img').src = s.img;
-        document.getElementById('dynamic-bg').style.backgroundImage = `url(${s.img})`;
-        document.getElementById('station-title').innerText = s.name;
-        document.getElementById('station-sub').innerText = s.desc;
-        audio.src = s.stream;
-    }
+    document.getElementById('nav-list').classList.toggle('active', view === 'list');
+    document.getElementById('nav-player').classList.toggle('active', view === 'player');
+}
 
-    function playStation() {
-        loadStation(currentIdx);
-        audio.play().catch(e => console.log("Play error:", e));
-        updateUI(true);
-        switchTab('player');
-    }
-
-    function togglePlay() {
-        if (audio.paused) { audio.play(); updateUI(true); }
-        else { audio.pause(); updateUI(false); }
-    }
-
-    function updateUI(isPlaying) {
-        const btn = document.getElementById('play-trigger');
-        btn.innerHTML = isPlaying ? '<i data-lucide="pause" fill="currentColor"></i>' : '<i data-lucide="play" fill="currentColor"></i>';
-        btn.classList.toggle('playing', isPlaying);
-        lucide.createIcons();
-    }
-
-    // Funcționalitate Butoane Next/Previous
-    function next() { 
-        currentIdx = (currentIdx + 1) % stations.length; 
-        playStation(); 
-    }
-    
-    function prev() { 
-        currentIdx = (currentIdx - 1 + stations.length) % stations.length; 
-        playStation(); 
-    }
-
-    function switchTab(view) {
-        document.getElementById('list-view').style.display = view === 'list' ? 'flex' : 'none';
-        document.getElementById('player-view').style.display = view === 'player' ? 'flex' : 'none';
-        
-        document.getElementById('nav-list').classList.toggle('active', view === 'list');
-        document.getElementById('nav-player').classList.toggle('active', view === 'player');
-        
-        document.getElementById('menu-popup').style.display = 'none';
-    }
-
-    function togglePopup() {
-        const p = document.getElementById('menu-popup');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function searchYoutube() { 
-        window.open("https://youtube.com/results?search_query=" + encodeURIComponent(stations[currentIdx].name), "_blank"); 
-    }
-    
-    function copyInfo() { 
-        navigator.clipboard.writeText(stations[currentIdx].name); 
-        alert("Station info copied!"); 
-    }
-
-    init();
+init();
 </script>
 </body>
 </html>
