@@ -17,6 +17,7 @@
     --accent: #ff5e3a;
     --glass: rgba(255, 255, 255, 0.1);
     --bg-dark: #000000;
+    --app-height: 100dvh; /* Variabilă dinamică pentru înălțime */
 }
 
 * { 
@@ -35,12 +36,13 @@
 body { 
     background: var(--bg-dark); 
     color: white; 
-    height: 100dvh; 
+    height: var(--app-height); 
     width: 100vw;
     overflow: hidden; 
     display: flex; 
     justify-content: center;
-    touch-action: pan-y; 
+    touch-action: pan-y;
+    transition: transform 0.1s ease-out; /* Pentru simularea de zoom */
 }
 
 .app-container {
@@ -191,25 +193,35 @@ border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), tran
 <audio id="audio-engine" preload="auto"></audio>
 
 <script>
-// --- LOGICĂ FORCE RESTART & IOS FIX ---
-(function() {
-    // Detectăm dacă pagina este servită din BFCache (Back-Forward Cache)
-    window.addEventListener('pageshow', function(event) {
-        // persisted este true dacă utilizatorul vine înapoi pe pagină
-        if (event.persisted || window.performance && window.performance.navigation.type === 2) {
-            // Force reload pentru a reseta layout-ul și mărimea corectă
-            window.location.reload();
-        }
-    });
-})();
-
+// --- LOGICĂ RESETARE LAYOUT (ZOOM & REFLOW) ---
 function fixIOSLayout() {
     window.scrollTo(0, 0);
-    document.body.style.height = '100.1dvh';
+    const root = document.documentElement;
+    
+    // Pas 1: Reducem infim dimensiunea și aplicăm un micro-zoom out
+    root.style.setProperty('--app-height', '99.5dvh');
+    document.body.style.transform = 'scale(0.999)';
+    
     setTimeout(() => {
-        document.body.style.height = '100dvh';
-    }, 50);
+        // Pas 2: Revenim la normal (Forțează Safari să recalculeze Safe Areas)
+        root.style.setProperty('--app-height', '100dvh');
+        document.body.style.transform = 'scale(1)';
+        
+        // Forțăm reflow
+        document.body.offsetHeight;
+        window.dispatchEvent(new Event('resize'));
+    }, 100);
 }
+
+// Executăm resetarea când utilizatorul se întoarce pe pagină
+window.addEventListener('pageshow', (e) => {
+    fixIOSLayout();
+});
+
+// Executăm când aplicația revine din background
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') fixIOSLayout();
+});
 
 // Blocare zoom gesturi sistem
 document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
