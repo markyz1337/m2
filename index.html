@@ -63,11 +63,6 @@ body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-avail
 .ll { flex:1; height:2px; background:rgba(255,255,255,0.12); border-radius:2px; }
 .ltag { font-size:10px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.35); }
 
-.vol-row { display:flex; align-items:center; gap:10px; padding:4px 24px 4px; }
-.vol-row svg { color:rgba(255,255,255,0.38); flex-shrink:0; }
-input[type=range].vsl { flex:1; -webkit-appearance:none; appearance:none; height:4px; background:rgba(255,255,255,0.18); border-radius:2px; outline:none; }
-input[type=range].vsl::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.4); }
-
 .act-row { display:flex; align-items:center; justify-content:space-between; padding:6px 26px 12px; }
 .abt { background:none; border:none; color:rgba(255,255,255,0.45); cursor:pointer; padding:8px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s; }
 .abt:hover { color:#fff; }
@@ -150,6 +145,9 @@ input[type=range].vsl::-webkit-slider-thumb { -webkit-appearance:none; width:18p
 .ctxr.dim { opacity:.4; }
 
 /* ===== WAVE / SPINNER ===== */
+/* Hide any elements injected by IcecastMetadataPlayer into body */
+body > audio, body > div:not(.app), body > span { display:none !important; }
+
 @keyframes wv { 0%,100%{height:3px} 50%{height:14px} }
 .wave { display:inline-flex; align-items:flex-end; gap:2px; height:16px; margin-left:6px; }
 .wave span { display:block; width:3px; border-radius:2px; background:#FF6B2B; animation:wv 1s ease-in-out infinite; }
@@ -215,12 +213,6 @@ opacity:0; transition:opacity .4s; pointer-events:none; z-index:5;
 </div>
 
 <div class="live-row"><div class="ll"></div><span class="ltag">LIVE</span><div class="ll"></div></div>
-
-<div class="vol-row">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
-  <input type="range" class="vsl" id="vsl" min="0" max="100" value="80" oninput="setVol(this.value)">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-</div>
 
 <div class="act-row">
   <button class="abt" id="fbtn" onclick="togFavPlayer()">
@@ -328,29 +320,14 @@ opacity:0; transition:opacity .4s; pointer-events:none; z-index:5;
 
 <script>
 // ===================== SVG LOGOS =====================
-const ONE_FM = `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <defs><radialGradient id="og" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#2a60e0"/><stop offset="100%" stop-color="#0a1888"/></radialGradient></defs>
-  <circle cx="150" cy="150" r="149" fill="url(#og)"/>
-  <circle cx="150" cy="150" r="128" fill="none" stroke="white" stroke-width="20"/>
-  <circle cx="150" cy="150" r="118" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4,3" opacity="0.3"/>
-  <line x1="218" y1="42" x2="186" y2="82" stroke="#e0306a" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="220" cy="38" r="10" fill="#e0306a"/>
-  <circle cx="107" cy="155" r="20" fill="#e0306a"/>
-  <text x="172" y="172" text-anchor="middle" font-size="66" fill="white" font-family="Arial Black,sans-serif" font-weight="900">one</text>
-  <text x="150" y="225" text-anchor="middle" font-size="23" fill="white" font-family="Arial,sans-serif" font-weight="700" letter-spacing="1.5">dance station</text>
-</svg>`;
+const ONE_FM = `<img src="https://images.weserv.nl/?url=encrypted-tbn0.gstatic.com/images%3Fq%3Dtbn%3AANd9GcTA_QI6oLPxnvnxfW40vzf-UToVCWVeKZ1OW4Y1ZodpQvGczuMKV8FPJp8%26s%3D10" style="width:100%;height:100%;object-fit:contain;border-radius:20px">`;
 
-const HEART_10S = `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <defs><radialGradient id="hg" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#7a0015"/><stop offset="100%" stop-color="#1e0005"/></radialGradient></defs>
-  <rect width="300" height="300" fill="url(#hg)"/>
-  <path d="M150 248 C96 210 26 170 26 104 C26 68 54 44 84 44 C108 44 130 57 150 80 C170 57 192 44 216 44 C246 44 274 68 274 104 C274 170 204 210 150 248Z" fill="#cc1020"/>
-  <path d="M150 222 C106 190 56 156 56 106 C56 78 76 60 98 60 C118 60 135 71 150 92 C165 71 182 60 202 60 C224 60 244 78 244 106 C244 156 194 190 150 222Z" fill="#0d0003"/>
-</svg>`;
+const HEART_10S = `<img src="https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png" style="width:100%;height:100%;object-fit:cover;border-radius:20px">`;
 
 // ===================== DATA =====================
 const stations = [
-  { id:'one-fm',    name:'One FM Dance Station', dname:'ONE FM DANCE STATION', country:'Romania',        tags:'DANCE, ELECTRONIC, HOUSE, TECHNO, POP', codec:'AAC', bitrate:'88 kbps',  url:'https://live.onefm.ro/onefm.aacp',                  svg:ONE_FM,    listbg:'#0e2060', bg:'radial-gradient(ellipse at 50% 15%, #1e3a90 0%, #060e3a 50%, #010205 100%)', fav:true },
-  { id:'heart-10s', name:'Heart 10s',            dname:'HEART 10S',            country:'United Kingdom', tags:'POP, HITS, CHART, 80S, 90S',            codec:'MP3', bitrate:'128 kbps', url:'https://media-ice.musicradio.com/Heart10sMP3',       svg:HEART_10S, listbg:'#500010', bg:'radial-gradient(ellipse at 50% 15%, #700012 0%, #220005 50%, #020000 100%)', fav:true },
+  { id:'one-fm',    name:'One FM Dance Station', dname:'ONE FM DANCE STATION', country:'Romania',        tags:'DANCE, ELECTRONIC, HOUSE, TECHNO, POP', codec:'AAC', bitrate:'88 kbps',  url:'https://live.onefm.ro/onefm.aacp',                  svg:ONE_FM,    listbg:'#1a3aaa', bg:'radial-gradient(ellipse at 50% 15%, #1e3a90 0%, #060e3a 50%, #010205 100%)', fav:true },
+  { id:'heart-10s', name:'Heart 10s',            dname:'HEART 10S',            country:'United Kingdom', tags:'POP, HITS, CHART, 80S, 90S',            codec:'MP3', bitrate:'128 kbps', url:'https://media-ice.musicradio.com/Heart10sMP3',       svg:HEART_10S, listbg:'#1a0a0a', bg:'radial-gradient(ellipse at 50% 15%, #700012 0%, #220005 50%, #020000 100%)', fav:true },
 ];
 let custom=[], curIdx=0, playing=false, loading=false, curTab='favorites', srch='';
 
