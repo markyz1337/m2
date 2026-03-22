@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Radio Player Full Screen</title>
+<title>Radio Player Premium Swipe</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
@@ -21,166 +19,133 @@
     -webkit-tap-highlight-color:transparent; 
 }
 
-html, body { 
-    background: var(--bg-dark); 
-    color: white; 
-    height: 100%; 
-    width: 100%;
-    overflow: hidden; 
-    position: fixed; /* Previne scroll-ul accidental al întregii pagini pe iOS */
+/* === ELIMINARE TOTALĂ BARE DE SCROLL === */
+::-webkit-scrollbar { display: none; }
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+.content::-webkit-scrollbar,
+.header-tabs::-webkit-scrollbar { display: none; }
 
-/* CONTAINERUL PRINCIPAL - Ocupă tot ecranul fără excepție */
+body { 
+    background:var(--bg-dark); 
+    color:white; 
+    height:100dvh; 
+    overflow:hidden; 
+    display:flex; 
+    justify-content:center; 
+}
 .app-container {
-    width: 100%; 
-    height: 100dvh; 
-    position: absolute; 
-    top: 0; left: 0;
-    overflow: hidden;
-    display: flex; 
-    flex-direction: column;
-    z-index: 1;
+    width:100%; max-width:430px; height:100%; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; padding-bottom:env(safe-area-inset-bottom);
 }
 
-/* FUNDALUL - Întins la maxim pe tot ecranul */
 .bg-blur {
-    position: fixed; 
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100vw; height: 100vh;
-    background-size: cover; 
-    background-position: center;
-    filter: blur(60px) brightness(0.4); 
-    z-index: 0;
-    will-change: opacity;
-    transition: opacity 1.5s ease-in-out;
+    position:absolute; top:-5%; left:-5%; width:125%; height:125%;
+    background-size:cover; background-position:center;
+    filter:blur(30px) brightness(0.4) saturate(1.1); background-repeat:no-repeat;
+    z-index:0; will-change:opacity,transform;
+    animation: bgBreathe 25s infinite ease-in-out;
+    transition: opacity 2s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
-#bg-layer-1 { opacity: 1; }
-#bg-layer-2 { opacity: 0; }
+#bg-layer-1 { opacity:1; animation-delay:0s; }
+#bg-layer-2 { opacity:0; animation-delay:45s; }
 
-/* HEADER - Împinge tab-urile sub ceasul iPhone-ului */
-.header-tabs { 
-    position: relative; 
-    z-index: 10; 
-    padding-top: calc(10px + env(safe-area-inset-top)); 
-    padding-left: 20px; padding-right: 20px; padding-bottom: 10px;
-    display: flex; 
-    gap: 10px; 
-    overflow-x: auto; 
+@keyframes bgBreathe {
+    0%   { transform: rotate(0deg) scale(1.0); translate: 0% 0%; }
+    25%  { transform: rotate(15deg) scale(1.4); translate: 10% -5%; }
+    50%  { transform: rotate(-10deg) scale(1.2); translate: -10% 10%; }
+    75%  { transform: rotate(20deg) scale(1.5); translate: 5% 5%; }
+    100% { transform: rotate(0deg) scale(1.0); translate: 0% 0%; }
 }
 
-.tab { 
-    background: var(--glass); 
-    padding: 8px 18px; 
-    border-radius: 20px; 
-    font-size: 13px; 
-    backdrop-filter: blur(15px); 
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255,255,255,0.1); 
-    cursor: pointer; 
-    white-space: nowrap; 
-}
-.tab.active { background: var(--accent); border-color: transparent; }
 
-/* LISTA - Se scurge până în marginea de jos */
-.content { 
-    position: relative; 
-    z-index: 10; 
-    flex: 1; 
-    padding: 0 20px calc(150px + env(safe-area-inset-bottom)) 20px; 
-    overflow-y: auto; 
-    -webkit-overflow-scrolling: touch;
-}
 
-.station-item { 
-    display: flex; 
-    align-items: center; 
-    padding: 15px 0; 
-    border-bottom: 0.5px solid rgba(255,255,255,0.08); 
-}
-.station-thumb { width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; object-fit: cover; background: #111; }
+.header-tabs { position:relative; z-index:10; padding:20px 20px 10px; display:flex; gap:10px; overflow-x:auto; }
+.tab { background:var(--glass); padding:8px 18px; border-radius:20px; font-size:13px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); cursor:pointer; white-space:nowrap; }
+.tab.active { background:var(--accent); border-color:transparent; }
+.content { position:relative; z-index:10; flex:1; padding:0 20px 140px 20px; overflow-y:auto; }
+.station-item { display:flex; align-items:center; padding:15px 0; border-bottom: 1px solid transparent;
+border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; }
+.station-thumb { width:55px; height:55px; border-radius:12px; margin-right:15px; object-fit:cover; background:#111; }
+.station-name { font-weight:600; font-size:16px; margin-bottom:4px; }
+.station-desc { font-size:11px; color:#b3b3b3; text-transform:uppercase; }
+#player-view { display:none; position:relative; z-index:10; height:100%; flex-direction:column; align-items:center; justify-content:center; padding:20px 0 100px 0; touch-action:pan-y; }
+.art-container { width:100%; display:flex; justify-content:center; margin-bottom:30px; }
+.main-art { width:280px; height:280px; border-radius:25px; box-shadow:0 25px 50px rgba(0,0,0,0.6); object-fit:cover; background:#111; transition:transform .6s ease, opacity .6s ease; }
+.track-viewport { width:100%; overflow:hidden; margin-bottom:30px; position:relative; }
+.track-slider-wrapper { display:flex; width:300%; transform:translateX(-33.333%); transition:transform .3s ease-out; will-change:transform; }
+.track-info-slide { width:33.333%; text-align:center; padding:0 40px; flex-shrink:0; }
+.track-info-slide h2 { font-size:22px; font-weight:600; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.track-info-slide p { color:#b3b3b3; font-size:14px; text-transform:uppercase; }
+.main-controls { display:flex; align-items:center; gap:30px; margin-bottom:20px; }
+.btn-round { background:var(--glass); width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); color:white; }
+.btn-play { background:#fff; color:#000; width:70px; height:70px; }
+.btn-play.playing { background:var(--accent); color:#fff; }
 
-/* PLAYER VIEW */
-#player-view { 
-    display: none; 
-    position: relative; 
-    z-index: 10; 
-    height: 100%; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
-}
-
-.art-container { width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
-.main-art { width: 75vw; max-width: 300px; aspect-ratio: 1/1; border-radius: 25px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); object-fit: cover; }
-
-.track-viewport { width: 100%; overflow: hidden; margin-bottom: 30px; }
-.track-slider-wrapper { display: flex; width: 300%; transform: translateX(-33.333%); transition: transform 0.3s ease-out; }
-.track-info-slide { width: 33.333%; text-align: center; padding: 0 40px; }
-
-/* NAV BAR - Plutește peste fundalul de jos */
+/* === NAV BAR CU ANIMATIE PILL === */
 .nav-bar { 
-    position: absolute; 
-    bottom: calc(20px + env(safe-area-inset-bottom)); 
-    left: 20px; right: 20px; z-index: 50; 
-    background: rgba(25,25,25,0.75); 
-    backdrop-filter: blur(25px); 
-    -webkit-backdrop-filter: blur(25px);
-    border-radius: 40px; 
-    display: flex; padding: 8px; 
-    border: 1px solid rgba(255,255,255,0.1); 
+    position:absolute; bottom:calc(15px + env(safe-area-inset-bottom)); left:20px; right:20px; z-index:50; 
+    background:rgba(20,20,20,0.85); backdrop-filter:blur(25px); border-radius:40px; 
+    display:flex; justify-content:space-around; padding:8px; border:1px solid rgba(255,255,255,0.1); 
 }
 
+/* Pastila care se mișcă */
 .nav-bar::before {
-    content: ''; position: absolute; top: 8px; left: 8px;
-    width: calc(50% - 12px); height: calc(100% - 16px);
-    background: rgba(255, 255, 255, 0.1); border-radius: 35px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: -1;
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: calc(50% - 8.5px); /* Jumătate din bară minus padding */
+    height: calc(100% - 16px);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 35px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
 }
+
+/* Poziția pastilei în funcție de starea activă */
 .nav-bar.on-radio::before { transform: translateX(100%); }
 .nav-bar.on-player::before { transform: translateX(0%); }
 
-.nav-link { flex:1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; color: #777; font-size: 11px; }
-.nav-link.active { color: #fff; }
-.nav-link.active i { color: var(--accent); }
-
-.fab { 
-    position: absolute; 
-    bottom: calc(110px + env(safe-area-inset-bottom)); 
-    right: 25px; 
-    background: var(--accent); 
-    width: 56px; height: 56px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; z-index: 15; 
+.nav-link { 
+    position: relative;
+    display:flex; flex-direction:column; align-items:center; gap:3px; 
+    padding:8px 0; width: 50%; border-radius:50px; color:#777; cursor:pointer; font-size:11px; 
+    transition: color 0.3s;
 }
+.nav-link.active { color:#fff; }
+.nav-link.active i { color:var(--accent); }
+
+.fab { position:absolute; bottom:calc(100px + env(safe-area-inset-bottom)); right:25px; background:var(--accent); width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(255,94,58,0.4); z-index:15; }
 </style>
 </head>
 <body>
-
-<div class="bg-blur" id="bg-layer-1"></div>
-<div class="bg-blur" id="bg-layer-2"></div>
-
 <div class="app-container">
+    <div class="bg-blur" id="bg-layer-1"></div>
+    <div class="bg-blur" id="bg-layer-2"></div>
+
     <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
         <div class="header-tabs">
-            <div class="tab" onclick="renderList('all', this)">All</div>
+            <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
             <div class="tab active" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
-            <div class="tab" onclick="renderList('mine', this)">Owned</div>
-            <div class="tab" onclick="renderList('russian', this)">Russian</div>
+            <div class="tab" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
+            <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
         </div>
         <div class="content" id="stations-list"></div>
-        <div class="fab" onclick="alert('Plus')"><i data-lucide="plus"></i></div>
+        <div class="fab" onclick="alert('Adaugă post')"><i data-lucide="plus"></i></div>
     </div>
 
     <div id="player-view">
         <div class="art-container" id="swipe-zone-art">
-            <img src="" class="main-art" id="player-img">
+            <img src="" class="main-art" id="player-img" onerror="this.src=FALLBACK_IMG">
         </div>
         <div class="track-viewport" id="swipe-zone-text">
             <div class="track-slider-wrapper" id="info-wrapper">
-                <div class="track-info-slide" id="slide-prev"><h2>Post</h2><p>Gen</p></div>
-                <div class="track-info-slide" id="slide-current"><h2>Alege Post</h2><p>Radio</p></div>
-                <div class="track-info-slide" id="slide-next"><h2>Post</h2><p>Gen</p></div>
+                <div class="track-info-slide" id="slide-prev"><h2>Nume Post</h2><p>Gen Muzical</p></div>
+                <div class="track-info-slide" id="slide-current"><h2>Selectează Post</h2><p>Apasă pe o stație</p></div>
+                <div class="track-info-slide" id="slide-next"><h2>Nume Post</h2><p>Gen Muzical</p></div>
             </div>
         </div>
         <div class="main-controls">
@@ -199,78 +164,188 @@ html, body {
 <audio id="audio-engine"></audio>
 
 <script>
-// Păstrăm logica ta originală, dar asigurăm popularea corectă
-const FALLBACK_IMG = "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png";
+const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.13982720394888960.16320d2b-98f6-4b3b-af8d-f33140cf192a.778f4c59-a76c-44c0-82f7-bd7357649848";
+
 const stations = [
     { name: "Heart 10s", stream: "https://media-ice.musicradio.com/Heart10sMP3", img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", desc: "POP, HITS, CHART", isFav: true, isAll: true },
     { name: "Kiss 10s", stream: "https://dc.digi.live.kissfm.ro/kiss.hits.from.the.10s/listen.m3u", img: "https://api.kissfm.ro/resized/streams/homepage/2025/01/10/cover-kiss-hits-from-the-10s_6210a8bb4e6b58d8b6d2c0342721cdb9.png", desc: "HITS FROM THE 10S", isFav: true, isAll: true },
-    { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://www.radiorecord.ru/icons/apple-touch-icon.png", desc: "RUSSIAN MIX", isRussian: true, isAll: true }
+    { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS", isFav: true, isAll: true },
+    { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO", isFav: true, isAll: true },
+    { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE", isFav: true, isAll: true },
+    { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://myradioonline.ro/public/uploads/radio_img/pro-dj-radio/play_250_250.webp", desc: "DJ MIX, CLUB, DANCE", isFav: true, isAll: true },
+    { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://www.radiorecord.ru/icons/apple-touch-icon.png", desc: "RECORD RUSSIAN MIX", isRussian: true, isAll: true },
+    { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS", isRussian: true, isAll: true },
+    { name: "DFM DANCE", stream: "https://dfm-dancegold10.hostingradio.ru/dancegold1096.aacp", img: "https://americadance90.com.br/wp-content/uploads/2024/05/DFM-Dance-Gold-90s.png", desc: "DANCE GOLD, 90S", isRussian: true, isAll: true },
+    
+    /* RADIOURILE MELE */
+    { name: "📟 Du-mă înapoi", stream: "http://155.133.23.121/hls/emisiunivechi/live.m3u8", img: "https://www.kissfm.ro/apple-touch-icon.png", desc: "KISS FM | RADIO 21 | RADIO ZU", isMine: true },
+    { name: "📀 Old", stream: "http://155.133.23.121/hls/muzicaveche/live.m3u8", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLP9yVUjMnZ6pcX89k4sD91R81YC0fIxdLMOkthMZabwsAovd4kw8ss5X&s=10", desc: "Muzica pe care am crescut", isMine: true },
+    { name: "🎷 Manele", stream: "http://155.133.23.121/hls/manele/live.m3u8", img: "https://i.scdn.co/image/ab6761610000e5eb0e9398072e2c38cb551bb657", desc: "Bem spargem pahare", isMine: true },
+    { name: "💛 Hope", stream: "http://155.133.23.121/hls/hope/live.m3u8", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "CINEVA LA FEL CA MINE", isMine: true }
 ];
 
 let currentIdx = 0;
-let currentFilteredList = [];
+let currentFilteredList = []; 
 let activeLayer = 1;
+let startX = 0;
+let isDragging = false;
 const audio = document.getElementById('audio-engine');
+const wrapper = document.getElementById('info-wrapper');
 
 function init() {
-    renderList('fav', document.getElementById('tab-fav'));
+    renderList('fav', document.getElementById('tab-fav')); 
     lucide.createIcons();
+    updateSliderText();
     loadStationInfo(0, false);
+    setupSwipe();
 }
 
 function renderList(mode, el) {
     const list = document.getElementById('stations-list');
     list.innerHTML = "";
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if(el) el.classList.add('active');
     
-    currentFilteredList = stations.filter(s => mode === 'all' ? s.isAll : s[Object.keys(s).find(k => k.toLowerCase().includes(mode))]);
-    if(currentFilteredList.length === 0) currentFilteredList = stations;
+    if(el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    currentFilteredList = stations.filter(s => {
+        if (mode === 'all') return s.isAll;
+        if (mode === 'fav') return s.isFav;
+        if (mode === 'russian') return s.isRussian;
+        if (mode === 'mine') return s.isMine;
+        return false;
+    });
 
     currentFilteredList.forEach((s, i) => {
+        const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
         const item = document.createElement('div');
         item.className = 'station-item';
-        item.innerHTML = `<img src="${s.img}" class="station-thumb"><div><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>`;
-        item.onclick = () => { currentIdx = i; playStation(); };
+        item.innerHTML = `<img src="${finalImg}" class="station-thumb" onerror="this.src=FALLBACK_IMG"><div style="flex:1"><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>`;
+        
+        item.onclick = () => { 
+            if (s.isMine) {
+                window.location.href = s.stream;
+            } else {
+                currentIdx = i;
+                playStation(); 
+            }
+        };
         list.appendChild(item);
     });
 }
 
+function updateSliderText() {
+    if (currentFilteredList.length === 0) return;
+    const prevIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
+    const nextIdx = (currentIdx + 1) % currentFilteredList.length;
+    updateSlide('slide-prev', currentFilteredList[prevIdx]);
+    updateSlide('slide-current', currentFilteredList[currentIdx]);
+    updateSlide('slide-next', currentFilteredList[nextIdx]);
+}
+
+function updateSlide(id, data) {
+    const el = document.getElementById(id);
+    el.querySelector('h2').innerText = data.name;
+    el.querySelector('p').innerText = data.desc;
+}
+
 function loadStationInfo(idx, shouldPlay = true) {
-    const s = currentFilteredList[idx] || stations[0];
-    document.getElementById('player-img').src = s.img;
+    if (currentFilteredList.length === 0) return;
+    const s = currentFilteredList[idx];
+    const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
+    document.getElementById('player-img').src = finalImg;
     audio.src = s.stream;
+
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: s.name,
+            artist: s.desc,
+            artwork: [{ src: finalImg, sizes: '512x512', type: 'image/png' }]
+        });
+        navigator.mediaSession.setActionHandler('play', () => togglePlay());
+        navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+        navigator.mediaSession.setActionHandler('previoustrack', () => prev());
+        navigator.mediaSession.setActionHandler('nexttrack', () => next());
+    }
+
+    if(shouldPlay) audio.play().catch(()=>{});
     
-    const nextL = activeLayer === 1 ? document.getElementById('bg-layer-2') : document.getElementById('bg-layer-1');
-    const prevL = activeLayer === 1 ? document.getElementById('bg-layer-1') : document.getElementById('bg-layer-2');
-    nextL.style.backgroundImage = `url(${s.img})`;
+    const l1 = document.getElementById('bg-layer-1');
+    const l2 = document.getElementById('bg-layer-2');
+    const nextL = activeLayer === 1 ? l2 : l1;
+    const prevL = activeLayer === 1 ? l1 : l2;
+    nextL.style.backgroundImage = `url(${finalImg})`;
     nextL.style.opacity = '1';
     prevL.style.opacity = '0';
     activeLayer = activeLayer === 1 ? 2 : 1;
-
-    document.getElementById('slide-current').querySelector('h2').innerText = s.name;
-    document.getElementById('slide-current').querySelector('p').innerText = s.desc;
-
-    if(shouldPlay) audio.play().catch(() => {});
     updateUI(!audio.paused && shouldPlay);
 }
 
-function playStation() { loadStationInfo(currentIdx, true); switchTab('player'); }
-function togglePlay() { audio.paused ? audio.play() : audio.pause(); updateUI(!audio.paused); }
-function updateUI(p) {
-    const b = document.getElementById('play-trigger');
-    b.innerHTML = p ? '<i data-lucide="pause"></i>' : '<i data-lucide="play"></i>';
-    p ? b.classList.add('playing') : b.classList.remove('playing');
-    lucide.createIcons();
+function playStation() { updateSliderText(); loadStationInfo(currentIdx, true); switchTab('player'); }
+function next() { currentIdx = (currentIdx + 1) % currentFilteredList.length; animateTransition('next'); }
+function prev() { currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length; animateTransition('prev'); }
+
+function animateTransition(dir) {
+    wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+    wrapper.style.transform = dir==='next' ? 'translateX(-66.666%)' : 'translateX(0)';
+    setTimeout(()=>{ 
+        wrapper.style.transition='none';
+        loadStationInfo(currentIdx, true);
+        updateSliderText();
+        wrapper.style.transform = 'translateX(-33.333%)';
+    },400);
+}
+
+function setupSwipe() {
+    const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
+    zones.forEach(z => {
+        z.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; wrapper.style.transition='none'; });
+        z.addEventListener('touchmove', e=>{ if(!isDragging) return; const d = e.touches[0].clientX-startX; wrapper.style.transform = `translateX(calc(-33.333% + ${(d/window.innerWidth)*33}%))`; });
+        z.addEventListener('touchend', e=>{ 
+            if(!isDragging) return;
+            const d = e.changedTouches[0].clientX - startX;
+            if(d>50) prev(); else if(d<-50) next(); else wrapper.style.transform='translateX(-33.333%)';
+            isDragging=false;
+        });
+    });
+}
+
+function togglePlay() {
+    if(audio.paused){ audio.play().catch(()=>{}); updateUI(true); } 
+    else { audio.pause(); updateUI(false); }
 }
 
 function switchTab(t) {
     const nav = document.getElementById('main-nav');
-    document.getElementById('list-view').style.display = t==='list'?'flex':'none';
-    document.getElementById('player-view').style.display = t==='player'?'flex':'none';
-    document.getElementById('nav-list').classList.toggle('active', t==='list');
-    document.getElementById('nav-player').classList.toggle('active', t==='player');
-    nav.className = t==='list' ? 'nav-bar on-radio' : 'nav-bar on-player';
+    if(t==='list'){ 
+        document.getElementById('list-view').style.display='flex'; 
+        document.getElementById('player-view').style.display='none';
+        document.getElementById('nav-list').classList.add('active'); 
+        document.getElementById('nav-player').classList.remove('active'); 
+        nav.className = 'nav-bar on-radio'; // Schimbă poziția pill-ului
+    } else { 
+        document.getElementById('list-view').style.display='none'; 
+        document.getElementById('player-view').style.display='flex';
+        document.getElementById('nav-list').classList.remove('active'); 
+        document.getElementById('nav-player').classList.add('active'); 
+        nav.className = 'nav-bar on-player'; // Schimbă poziția pill-ului
+    }
+}
+
+function updateUI(p){ 
+    const b = document.getElementById('play-trigger'); 
+    if(p){ 
+        b.classList.add('playing'); 
+        b.innerHTML='<i data-lucide="pause" fill="currentColor"></i>'; 
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
+    }
+    else{ 
+        b.classList.remove('playing'); 
+        b.innerHTML='<i data-lucide="play" fill="currentColor"></i>'; 
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+    }
+    lucide.createIcons();
 }
 
 init();
