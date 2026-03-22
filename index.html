@@ -1,103 +1,495 @@
-
 <!DOCTYPE html>
-<html lang="en">
+
+<html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Stream</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            overflow: scroll; /* Permite derularea pe verticală și orizontală */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Radio Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+html, body { height:100%; background:#000; color:#fff; font-family:'Inter',sans-serif; overflow:hidden; }
+.app { max-width:430px; margin:0 auto; height:100vh; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+.view { display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+.view.active { display:flex; }
 
-        /* Personalizarea barelor de derulare */
-        ::-webkit-scrollbar {
-            width: 1px; /* Grosimea barei de derulare verticală */
-            height: 0px; /* Grosimea barei de derulare orizontală */
-        }
+/* ===== PLAYER ===== */
+#player-view { position:relative; }
+.pbg { position:absolute; inset:0; z-index:0; transition:background 0.7s ease; }
+.pc { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0); /* Culoarea și transparența thumb-ului */
-            border-radius: 4px; /* Colțurile rotunjite ale thumb-ului */
-        }
+.art-wrap {
+flex:1; display:flex; align-items:center; justify-content:center;
+padding:24px 0 8px; min-height:0;
+}
+.art-svg {
+width:min(72vw, 300px); aspect-ratio:1;
+filter:drop-shadow(0 10px 60px rgba(0,0,0,0.7));
+}
+.art-svg svg { width:100%; height:100%; }
 
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0); /* Culoarea track-ului */
-        }
+.info { padding:6px 24px 2px; text-align:center; }
 
-        #video-container {
-            width: 100vw; /* Ocupă 100% din lățimea vizibilă a ferestrei */
-            height: 100vh; /* Ocupă 100% din înălțimea vizibilă a ferestrei */
-            position: relative;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .scroll-space {
-            width: 100vw;
-            height: 100vh;
-        }
-    </style>
+.smeta {
+display:flex; align-items:center; justify-content:center;
+gap:6px; font-size:11px; color:rgba(255,255,255,0.4);
+margin-bottom:5px; letter-spacing:0.2px;
+}
+
+.st-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.5); margin-bottom:4px; letter-spacing:0.3px; }
+
+#song-block .s-title { font-size:22px; font-weight:800; letter-spacing:0.3px; }
+#song-block .s-artist { font-size:15px; color:rgba(255,255,255,0.7); margin-top:3px; }
+#song-block .s-album { font-size:13px; color:rgba(255,255,255,0.38); margin-top:2px; }
+
+#fallback-block .st-big { font-size:20px; font-weight:800; letter-spacing:0.4px; }
+#fallback-block .st-tags { font-size:12px; color:rgba(255,255,255,0.42); margin-top:3px; letter-spacing:0.4px; }
+#fallback-block .st-ctr { font-size:12px; color:rgba(255,255,255,0.42); letter-spacing:0.4px; }
+
+/* controls */
+.ctrl-row { display:flex; align-items:center; justify-content:center; gap:28px; padding:14px 24px 4px; }
+.ctrl { background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer; padding:6px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s,transform .1s; }
+.ctrl:hover { color:#fff; }
+.ctrl:active { transform:scale(.9); }
+.ctrl-play {
+width:64px; height:64px;
+background:rgba(255,255,255,0.16); border:none; border-radius:18px;
+color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
+transition:background .2s, transform .1s; backdrop-filter:blur(8px);
+}
+.ctrl-play:hover { background:rgba(255,255,255,0.26); }
+.ctrl-play:active { transform:scale(.92); }
+
+.live-row { display:flex; align-items:center; gap:10px; padding:2px 24px 2px; }
+.ll { flex:1; height:2px; background:rgba(255,255,255,0.12); border-radius:2px; }
+.ltag { font-size:10px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.35); }
+
+.vol-row { display:flex; align-items:center; gap:10px; padding:4px 24px 4px; }
+.vol-row svg { color:rgba(255,255,255,0.38); flex-shrink:0; }
+input[type=range].vsl { flex:1; -webkit-appearance:none; appearance:none; height:4px; background:rgba(255,255,255,0.18); border-radius:2px; outline:none; }
+input[type=range].vsl::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.4); }
+
+.act-row { display:flex; align-items:center; justify-content:space-between; padding:6px 26px 12px; }
+.abt { background:none; border:none; color:rgba(255,255,255,0.45); cursor:pointer; padding:8px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s; }
+.abt:hover { color:#fff; }
+.abt.fav-on { color:#e03060; }
+
+/* ===== BOTTOM NAV ===== */
+.bnav { display:flex; padding:8px 8px 24px; background:rgba(12,8,8,0.93); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter:blur(20px); flex-shrink:0; z-index:100; gap:4px; }
+.nbtn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; color:rgba(255,255,255,0.42); cursor:pointer; padding:10px 8px; font-family:‘Inter’,sans-serif; font-size:11px; font-weight:600; border-radius:16px; transition:all .2s; }
+.nbtn.active { background:rgba(255,255,255,0.1); color:#FF6B2B; }
+
+/* ===== RADIO VIEW ===== */
+#radio-view { background:#000; }
+.rtop { padding:14px 14px 0; flex-shrink:0; }
+.tscroll { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-bottom:10px; }
+.tscroll::-webkit-scrollbar { display:none; }
+.ttab { white-space:nowrap; padding:8px 16px; border-radius:22px; border:none; background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.48); font-family:‘Inter’,sans-serif; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .2s; }
+.ttab.active { background:#FF6B2B; color:#fff; }
+.sscroll { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-bottom:8px; }
+.sscroll::-webkit-scrollbar { display:none; }
+.sbtn { padding:5px 13px; border-radius:16px; border:1.5px solid rgba(255,255,255,0.1); background:none; color:rgba(255,255,255,0.42); font-family:‘Inter’,sans-serif; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:5px; transition:all .2s; }
+.sbtn.active { border-color:#FF6B2B; color:#FF6B2B; }
+.swrap { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.sbox { flex:1; display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06); border-radius:22px; padding:8px 14px; }
+.sbox input { flex:1; background:none; border:none; color:#fff; font-family:‘Inter’,sans-serif; font-size:13px; outline:none; }
+.sbox input::placeholder { color:rgba(255,255,255,0.28); }
+.cbadge { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.48); font-size:12px; font-weight:700; padding:7px 13px; border-radius:16px; }
+.stlist { flex:1; overflow-y:auto; padding:4px 14px 8px; scrollbar-width:none; min-height:0; }
+.stlist::-webkit-scrollbar { display:none; }
+.sti { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; transition:opacity .15s; }
+.sti:hover { opacity:.82; }
+.sti:last-child { border-bottom:none; }
+.stlogo { width:66px; height:66px; border-radius:14px; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.stlogo svg { width:100%; height:100%; }
+.stinfo { flex:1; min-width:0; }
+.stname { font-size:15px; font-weight:700; margin-bottom:1px; display:flex; align-items:center; }
+.stctr { font-size:12px; font-weight:600; color:rgba(255,255,255,0.42); margin-bottom:2px; }
+.sttags { font-size:11px; color:rgba(255,255,255,0.28); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sttech { display:flex; gap:8px; font-size:10px; color:rgba(255,255,255,0.22); }
+.stfav { background:none; border:none; cursor:pointer; color:#e03060; padding:6px; opacity:.28; flex-shrink:0; transition:opacity .2s; }
+.stfav.on { opacity:1; }
+.myhd { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0 10px; }
+.myhd-l h3 { font-size:16px; font-weight:800; }
+.myhd-l p { font-size:12px; color:rgba(255,255,255,0.38); margin-top:2px; }
+.mycnt { text-align:right; font-size:14px; font-weight:800; color:rgba(255,255,255,0.48); }
+.mycnt small { display:block; font-size:10px; font-weight:500; }
+.fab { position:absolute; bottom:84px; right:18px; width:54px; height:54px; border-radius:50%; background:#FF6B2B; border:none; color:#fff; font-size:26px; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(255,107,43,.45); z-index:10; transition:transform .2s; }
+.fab:hover { transform:scale(1.08); }
+.fab.show { display:flex; }
+
+/* ===== SETTINGS ===== */
+#settings-view { background:#000; align-items:center; justify-content:center; }
+#settings-view p { color:rgba(255,255,255,0.22); font-size:14px; margin-top:14px; }
+
+/* ===== MODAL ===== */
+.ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:200; backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; }
+.ov.open { display:flex; }
+.modal { background:#1c1c26; border-radius:28px 28px 0 0; width:100%; max-width:430px; padding:20px; max-height:80vh; overflow-y:auto; }
+.mhd { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.mt { font-size:16px; font-weight:800; }
+.mc, .ms { padding:8px 20px; border-radius:20px; border:none; font-family:‘Inter’,sans-serif; font-size:13px; font-weight:700; cursor:pointer; }
+.mc { background:rgba(255,255,255,0.08); color:#fff; }
+.ms { background:#FF6B2B; color:#fff; }
+.msec { margin-bottom:18px; }
+.msec h4 { font-size:12px; font-weight:700; color:rgba(255,255,255,0.38); margin-bottom:8px; text-transform:uppercase; letter-spacing:.8px; }
+.mig { background:rgba(255,255,255,0.06); border-radius:16px; overflow:hidden; }
+.mi { width:100%; background:none; border:none; border-bottom:1px solid rgba(255,255,255,0.06); padding:14px 16px; color:#fff; font-family:‘Inter’,sans-serif; font-size:14px; outline:none; }
+.mi:last-child { border-bottom:none; }
+.mi::placeholder { color:rgba(255,255,255,0.28); }
+.vrow { display:flex; align-items:center; gap:10px; background:rgba(255,107,43,.1); border:1.5px solid rgba(255,107,43,.5); border-radius:16px; padding:14px 16px; cursor:pointer; font-size:14px; font-weight:700; color:#FF6B2B; }
+.vnote { font-size:11px; color:rgba(255,255,255,.32); margin-top:8px; line-height:1.5; }
+
+/* ===== CTX ===== */
+.ctxov { display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,.68); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
+.ctxov.open { display:flex; }
+.ctxbox { background:#1e1e2c; border-radius:22px; width:290px; overflow:hidden; }
+.ctxr { display:flex; align-items:center; gap:14px; padding:15px 20px; cursor:pointer; font-size:15px; font-weight:500; border-bottom:1px solid rgba(255,255,255,.05); transition:background .1s; }
+.ctxr:last-child { border-bottom:none; }
+.ctxr:hover { background:rgba(255,255,255,.04); }
+.ctxr svg { color:rgba(255,255,255,.42); flex-shrink:0; }
+.ctxr.dim { opacity:.4; }
+
+/* ===== WAVE / SPINNER ===== */
+@keyframes wv { 0%,100%{height:3px} 50%{height:14px} }
+.wave { display:inline-flex; align-items:flex-end; gap:2px; height:16px; margin-left:6px; }
+.wave span { display:block; width:3px; border-radius:2px; background:#FF6B2B; animation:wv 1s ease-in-out infinite; }
+.wave span:nth-child(2){animation-delay:.15s} .wave span:nth-child(3){animation-delay:.3s} .wave span:nth-child(4){animation-delay:.1s}
+@keyframes spin { to{transform:rotate(360deg)} }
+.spin { animation:spin .8s linear infinite; display:flex; }
+</style>
+
 </head>
 <body>
+<div class="app">
 
-<div id="video-container">
-    <video id="video" autoplay muted playsinline></video>
+<!-- ===== PLAYER ===== -->
+
+<div id="player-view" class="view active">
+  <div class="pbg" id="pbg"></div>
+  <div class="pc">
+    <div class="art-wrap"><div class="art-svg" id="art"></div></div>
+
+```
+<div class="info">
+  <div class="smeta">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    HTTPS &nbsp;–&nbsp;
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="3" height="12"/><rect x="6" y="9" width="3" height="9"/><rect x="11" y="12" width="3" height="6"/><rect x="16" y="4" width="3" height="14"/></svg>
+    <span id="p-codec">AAC</span>&nbsp;–&nbsp;
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="p-bitrate">88 kbps</span>
+  </div>
+  <div class="st-label" id="p-stlabel"></div>
+  <div id="song-block" style="display:none">
+    <div class="s-title" id="s-title"></div>
+    <div class="s-artist" id="s-artist"></div>
+    <div class="s-album" id="s-album"></div>
+  </div>
+  <div id="fallback-block">
+    <div class="st-big" id="p-name"></div>
+    <div class="st-tags" id="p-tags"></div>
+    <div class="st-ctr" id="p-ctr"></div>
+  </div>
 </div>
 
-<div id="scroll-space"></div>
+<div class="ctrl-row">
+  <button class="ctrl" onclick="prevSt()">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6z"/><polygon points="7,12 18,5 18,19"/></svg>
+  </button>
+  <button class="ctrl-play" id="pbtn" onclick="togglePlay()">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>
+  </button>
+  <button class="ctrl" onclick="nextSt()">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2z"/><polygon points="17,12 6,5 6,19"/></svg>
+  </button>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<div class="live-row"><div class="ll"></div><span class="ltag">LIVE</span><div class="ll"></div></div>
+
+<div class="vol-row">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+  <input type="range" class="vsl" min="0" max="100" value="80" oninput="setVol(this.value)">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+</div>
+
+<div class="act-row">
+  <button class="abt" id="fbtn" onclick="togFavPlayer()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+  </button>
+  <button class="abt" onclick="openAddMod()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="abt">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+  </button>
+  <button class="abt">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  </button>
+  <button class="abt">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+  <button class="abt" onclick="showCtx()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+  </button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ===== RADIO VIEW ===== -->
+
+<div id="radio-view" class="view">
+  <div class="rtop">
+    <div class="tscroll">
+      <button class="ttab" onclick="setTab(this,'recent')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recent</button>
+      <button class="ttab active" onclick="setTab(this,'favorites')"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Favorites</button>
+      <button class="ttab" onclick="setTab(this,'my')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>My</button>
+      <button class="ttab" onclick="setTab(this,'local')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Local</button>
+      <button class="ttab" onclick="setTab(this,'all')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>All</button>
+    </div>
+    <div class="sscroll">
+      <button class="sbtn" onclick="setSort(this)">A A-Z</button>
+      <button class="sbtn active" onclick="setSort(this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="6" width="3" height="12"/><rect x="6" y="9" width="3" height="9"/><rect x="11" y="12" width="3" height="6"/><rect x="16" y="4" width="3" height="14"/></svg>Frequency ▾</button>
+      <button class="sbtn" onclick="setSort(this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Duration</button>
+    </div>
+    <div class="swrap">
+      <div class="sbox"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search radio station met..." oninput="filterSt(this.value)"></div>
+      <div class="cbadge" id="cbadge">2</div>
+    </div>
+  </div>
+  <div class="stlist" id="stlist"></div>
+  <button class="fab" id="fab" onclick="openAddMod()">+</button>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+
+<div id="settings-view" class="view">
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  <p>Settings</p>
+</div>
+
+<!-- BOTTOM NAV -->
+
+<div class="bnav">
+  <button class="nbtn active" id="nav-player" onclick="showView('player')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Player
+  </button>
+  <button class="nbtn" id="nav-radio" onclick="showView('radio')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="11" rx="10" ry="7"/><circle cx="12" cy="11" r="3"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>Radio
+  </button>
+  <button class="nbtn" id="nav-settings" onclick="showView('settings')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
+  </button>
+</div>
+</div>
+
+<!-- CTX MENU -->
+
+<div class="ctxov" id="ctxov" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="ctxbox">
+    <div class="ctxr"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5C2 5.47 4.47 3 7.5 3h9C19.53 3 22 5.47 22 8.5v7c0 3.03-2.47 5.5-5.5 5.5h-9C4.47 21 2 18.53 2 15.5v-7z"/><circle cx="12" cy="12" r="3"/></svg>AirPlay</div>
+    <div class="ctxr"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share Radio Station</div>
+    <div class="ctxr"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Open Radio Station Homepage</div>
+    <div class="ctxr dim"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Share Song</div>
+    <div class="ctxr dim"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>Open Song in Apple Music</div>
+    <div class="ctxr dim"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Search Song on YouTube</div>
+    <div class="ctxr dim"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Song Info</div>
+    <div class="ctxr"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Report Streaming Problem</div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+
+<div class="ov" id="addov">
+  <div class="modal">
+    <div class="mhd"><button class="mc" onclick="closeAddMod()">Cancel</button><span class="mt">Add Radio Station</span><button class="ms" onclick="saveSt()">Save</button></div>
+    <div class="msec"><h4>Required</h4><div class="mig"><input class="mi" id="nn" type="text" placeholder="Radio Station Name"><input class="mi" id="nu" type="text" placeholder="Stream URL"></div></div>
+    <div class="msec"><h4>Optional</h4><div class="mig">
+      <input class="mi" id="nh" type="text" placeholder="Homepage URL">
+      <input class="mi" id="nf" type="text" placeholder="Favicon URL">
+      <input class="mi" id="nc" type="text" placeholder="Country">
+      <input class="mi" id="nco" type="text" placeholder="Codec">
+      <input class="mi" id="nb" type="text" placeholder="Bitrate (kbps)">
+      <input class="mi" id="nt" type="text" placeholder="Tags (comma separated)">
+      <input class="mi" id="ncr" type="text" placeholder="Credits">
+    </div></div>
+    <div class="msec"><h4>Validation</h4>
+      <div class="vrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Validate Stream</div>
+      <p class="vnote">Validates that the stream URL is accessible and returns audio content.</p>
+    </div>
+  </div>
+</div>
+
+<audio id="aud" crossorigin="anonymous"></audio>
+
 <script>
-    const video = document.getElementById('video');
-    const videoSrc = 'https://atomic.streamnet.ro/atomictv.m3u8';
+// ===================== SVG LOGOS =====================
+const ONE_FM = `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><radialGradient id="og" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#2a60e0"/><stop offset="100%" stop-color="#0a1888"/></radialGradient></defs>
+  <circle cx="150" cy="150" r="149" fill="url(#og)"/>
+  <circle cx="150" cy="150" r="128" fill="none" stroke="white" stroke-width="20"/>
+  <circle cx="150" cy="150" r="118" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4,3" opacity="0.3"/>
+  <line x1="218" y1="42" x2="186" y2="82" stroke="#e0306a" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="220" cy="38" r="10" fill="#e0306a"/>
+  <circle cx="107" cy="155" r="20" fill="#e0306a"/>
+  <text x="172" y="172" text-anchor="middle" font-size="66" fill="white" font-family="Arial Black,sans-serif" font-weight="900">one</text>
+  <text x="150" y="225" text-anchor="middle" font-size="23" fill="white" font-family="Arial,sans-serif" font-weight="700" letter-spacing="1.5">dance station</text>
+</svg>`;
 
-    if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(videoSrc);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            video.play();
-        });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoSrc;
-        video.addEventListener('loadedmetadata', function() {
-            video.play();
-        });
-    }
+const HEART_10S = `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><radialGradient id="hg" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#7a0015"/><stop offset="100%" stop-color="#1e0005"/></radialGradient></defs>
+  <rect width="300" height="300" fill="url(#hg)"/>
+  <!-- Outer heart (red) -->
+  <path d="M150 248
+    C96 210 26 170 26 104
+    C26 68 54 44 84 44
+    C108 44 130 57 150 80
+    C170 57 192 44 216 44
+    C246 44 274 68 274 104
+    C274 170 204 210 150 248Z"
+    fill="#cc1020"/>
+  <!-- Inner cutout (dark) -->
+  <path d="M150 222
+    C106 190 56 156 56 106
+    C56 78 76 60 98 60
+    C118 60 135 71 150 92
+    C165 71 182 60 202 60
+    C224 60 244 78 244 106
+    C244 156 194 190 150 222Z"
+    fill="#0d0003"/>
+</svg>`;
 
-    video.addEventListener('click', function() {
-        video.muted = !video.muted;
-    });
+// ===================== DATA =====================
+const stations = [
+  { id:'one-fm', name:'One FM Dance Station', dname:'ONE FM DANCE STATION', country:'Romania',
+    tags:'DANCE, ELECTRONIC, HOUSE, TECHNO, POP', codec:'AAC', bitrate:'88 kbps',
+    url:'https://live.onefm.ro/onefm.aacp', svg:ONE_FM, listbg:'#0e2060',
+    bg:'radial-gradient(ellipse at 50% 15%, #1e3a90 0%, #060e3a 50%, #010205 100%)', fav:true },
+  { id:'heart-10s', name:'Heart 10s', dname:'HEART 10S', country:'United Kingdom',
+    tags:'POP, HITS, CHART, 80S, 90S', codec:'MP3', bitrate:'128 kbps',
+    url:'https://media-ice.musicradio.com/Heart10sMP3', svg:HEART_10S, listbg:'#500010',
+    bg:'radial-gradient(ellipse at 50% 15%, #700012 0%, #220005 50%, #020000 100%)', fav:true }
+];
+let custom=[], curIdx=0, playing=false, loading=false, curTab='favorites', srch='';
+const aud=document.getElementById('aud');
+function all(){ return [...stations,...custom]; }
 
-    // Adaugă dinamic mai multe spații de derulare la scroll
-    window.addEventListener('scroll', function() {
-        const scrollSpace = document.getElementById('scroll-space');
-        const scrollThreshold = 100; // Threshold pentru a adăuga spațiu înainte de a atinge marginea
+// ===================== PLAYER =====================
+function loadSt(i){
+  const a=all(); if(i<0||i>=a.length)return;
+  curIdx=i; const s=a[i];
+  document.getElementById('pbg').style.background=s.bg||'#000';
+  document.getElementById('art').innerHTML=s.svg||'';
+  document.getElementById('p-codec').textContent=s.codec;
+  document.getElementById('p-bitrate').textContent=s.bitrate;
+  document.getElementById('p-stlabel').textContent='';
+  document.getElementById('song-block').style.display='none';
+  document.getElementById('fallback-block').style.display='block';
+  document.getElementById('p-name').textContent=s.dname;
+  document.getElementById('p-tags').textContent=s.tags;
+  document.getElementById('p-ctr').textContent=s.country.toUpperCase();
+  document.getElementById('fbtn').classList.toggle('fav-on',!!s.fav);
+  aud.src=s.url; playing=false; setIcon(false); play();
+}
+function play(){
+  loading=true; setLoad();
+  aud.play().then(()=>{playing=true;loading=false;setIcon(true);}).catch(()=>{loading=false;setIcon(false);});
+}
+function togglePlay(){ if(loading)return; if(playing){aud.pause();playing=false;setIcon(false);}else{loading=true;setLoad();aud.play().then(()=>{playing=true;loading=false;setIcon(true);}).catch(()=>{loading=false;setIcon(false);});} }
+function setIcon(p){ const b=document.getElementById('pbtn'); b.innerHTML=p?`<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>`:`<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`; }
+function setLoad(){ document.getElementById('pbtn').innerHTML=`<div class="spin"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>`; }
+function prevSt(){ loadSt((curIdx-1+all().length)%all().length); }
+function nextSt(){ loadSt((curIdx+1)%all().length); }
+function setVol(v){ aud.volume=v/100; }
+function togFavPlayer(){ const s=all()[curIdx]; s.fav=!s.fav; document.getElementById('fbtn').classList.toggle('fav-on',s.fav); renderList(); }
+aud.addEventListener('playing',()=>{ playing=true;loading=false;setIcon(true); });
+aud.addEventListener('waiting',()=>{ loading=true;setLoad(); });
+aud.addEventListener('error',()=>{ loading=false;playing=false;setIcon(false); });
+aud.addEventListener('pause',()=>{ playing=false;setIcon(false); });
 
-        if (window.scrollY + window.innerHeight + scrollThreshold >= document.documentElement.scrollHeight) {
-            for (let i = 0; i < 5; i++) {
-                let newSpace = document.createElement('div');
-                newSpace.className = 'scroll-space';
-                scrollSpace.appendChild(newSpace);
-            }
-        }
+// ===================== VIEWS =====================
+function showView(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nbtn').forEach(e=>e.classList.remove('active'));
+  document.getElementById(v+'-view').classList.add('active');
+  document.getElementById('nav-'+v).classList.add('active');
+  if(v==='radio') renderList();
+}
 
-        if (window.scrollX + window.innerWidth + scrollThreshold >= document.documentElement.scrollWidth) {
-            for (let i = 0; i < 5; i++) {
-                let newSpace = document.createElement('div');
-                newSpace.className = 'scroll-space';
-                scrollSpace.appendChild(newSpace);
-            }
-        }
-    });
+// ===================== TABS =====================
+function setTab(el,tab){
+  curTab=tab;
+  document.querySelectorAll('.ttab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fab').classList.toggle('show',tab==='my');
+  renderList();
+}
+function setSort(el){ document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
+function filterSt(q){ srch=q.toLowerCase(); renderList(); }
+
+function renderList(){
+  const el=document.getElementById('stlist'), badge=document.getElementById('cbadge');
+  let items=all();
+  if(curTab==='favorites') items=items.filter(s=>s.fav);
+  else if(curTab==='my') items=[...custom];
+  else if(curTab==='recent') items=[...all()].reverse().slice(0,5);
+  else if(curTab==='local') items=items.filter(s=>s.country==='Romania');
+  if(srch) items=items.filter(s=>s.name.toLowerCase().includes(srch)||(s.tags||'').toLowerCase().includes(srch)||(s.country||'').toLowerCase().includes(srch));
+  badge.textContent=items.length;
+
+  let html='';
+  if(curTab==='my'){
+    html+=`<div class="myhd"><div class="myhd-l"><h3>Your Radio Stations</h3><p>Add your own radio streams</p></div><div class="mycnt">${custom.length}/15<small>stations</small></div></div>`;
+  }
+  if(!items.length){ html+=`<div style="text-align:center;padding:60px 0;color:rgba(255,255,255,0.22);font-size:14px">No stations found</div>`; }
+  items.forEach(s=>{
+    const gi=all().indexOf(s), isNow=gi===curIdx;
+    const logo=`<div class="stlogo" style="background:${s.listbg||'#1a1a2e'}">${s.svg||''}</div>`;
+    const wave=isNow?`<span class="wave"><span></span><span></span><span></span><span></span></span>`:'';
+    html+=`<div class="sti" onclick="pickSt(${gi})">
+      ${logo}
+      <div class="stinfo">
+        <div class="stname" style="${isNow?'color:#FF6B2B':''}">${s.name}${wave}</div>
+        <div class="stctr">${s.country}</div>
+        <div class="sttags">${s.tags}</div>
+        <div class="sttech"><span>🔒 HTTPS</span><span>📶 ${s.codec}</span><span>⏱ ${s.bitrate}</span>${s.custom?'<span style="color:#4CAF50">✔</span>':''}</div>
+      </div>
+      <button class="stfav${s.fav?' on':''}" onclick="togFavList(event,${gi})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function pickSt(i){ loadSt(i); showView('player'); }
+function togFavList(e,i){ e.stopPropagation(); all()[i].fav=!all()[i].fav; if(i===curIdx) document.getElementById('fbtn').classList.toggle('fav-on',all()[i].fav); renderList(); }
+
+// ===================== CTX =====================
+function showCtx(){ document.getElementById('ctxov').classList.add('open'); }
+
+// ===================== MODAL =====================
+function openAddMod(){ document.getElementById('addov').classList.add('open'); }
+function closeAddMod(){ document.getElementById('addov').classList.remove('open'); }
+function saveSt(){
+  const name=document.getElementById('nn').value.trim(), url=document.getElementById('nu').value.trim();
+  if(!name||!url){ alert('Completează Numele și URL-ul!'); return; }
+  const codec=document.getElementById('nco').value||'AAC';
+  const bitrate=(document.getElementById('nb').value||'128')+' kbps';
+  const country=document.getElementById('nc').value||'Unknown';
+  const tags=document.getElementById('nt').value||'';
+  const initials=name.slice(0,3).toUpperCase();
+  const cSVG=`<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"><circle cx="150" cy="150" r="149" fill="#1a2a3a"/><text x="150" y="170" text-anchor="middle" font-size="80" fill="white" font-family="Arial Black,sans-serif" font-weight="900">${initials}</text></svg>`;
+  custom.push({ id:'c'+Date.now(), name, dname:name.toUpperCase(), country, tags, codec, bitrate, url, svg:cSVG, listbg:'#1a2a3a', bg:'radial-gradient(ellipse at 50% 15%, #1a2a3a 0%, #060810 100%)', fav:true, custom:true });
+  closeAddMod();
+  ['nn','nu','nh','nf','nc','nco','nb','nt','ncr'].forEach(id=>document.getElementById(id).value='');
+  renderList();
+}
+
+// ===================== INIT =====================
+loadSt(0);
 </script>
 
 </body>
