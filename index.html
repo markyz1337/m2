@@ -16,7 +16,22 @@ body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-avail
 
 /* ===== PLAYER ===== */
 #player-view { position:relative; }
-.pbg { position:absolute; inset:0; z-index:0; transition:background 0.7s ease; }
+.pbg { position:absolute; inset:0; z-index:0; overflow:hidden; }
+.pbg-img {
+position:absolute;
+inset:-50%;
+width:200%; height:200%;
+background-size:cover;
+background-position:center;
+transform:rotate(30deg) scale(1.1);
+filter:blur(48px) saturate(1.6) brightness(0.7);
+opacity:0.9;
+transition:background-image 0.7s ease;
+}
+.pbg-overlay {
+position:absolute; inset:0;
+transition:background 0.7s ease;
+}
 .pc { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; }
 
 /* Compact art */
@@ -55,9 +70,9 @@ body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-avail
 .abt.fav-on { color:#e03060; }
 
 /* ===== BOTTOM NAV ===== */
-.bnav { display:flex; padding:6px 8px 20px; background:rgba(12,8,8,0.93); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter:blur(20px); flex-shrink:0; z-index:100; gap:4px; }
-.nbtn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:none; border:none; color:rgba(255,255,255,0.42); cursor:pointer; padding:8px 6px; font-family:‘Inter’,sans-serif; font-size:10px; font-weight:600; border-radius:14px; transition:all .2s; }
-.nbtn.active { background:rgba(255,255,255,0.1); color:#FF6B2B; }
+.bnav { display:flex; padding:6px 8px 20px; background:rgba(10,6,6,0.88); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter:blur(20px); flex-shrink:0; z-index:100; gap:4px; }
+.nbtn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:none; border:none; color:rgba(255,255,255,0.38); cursor:pointer; padding:8px 6px; font-family:‘Inter’,sans-serif; font-size:10px; font-weight:600; border-radius:16px; transition:all .2s; }
+.nbtn.active { background:rgba(255,107,43,0.15); color:#FF6B2B; border-radius:20px; }
 
 /* ===== RADIO VIEW ===== */
 #radio-view { background:#000; }
@@ -151,7 +166,7 @@ body > audio, body > div:not(.app), body > span { display:none !important; }
 <!-- ===== PLAYER ===== -->
 
 <div id="player-view" class="view active">
-  <div class="pbg" id="pbg"></div>
+  <div class="pbg" id="pbg"><div class="pbg-img" id="pbg-img"></div><div class="pbg-overlay" id="pbg-overlay"></div></div>
   <div class="pc">
     <div class="art-wrap"><div class="art-svg" id="art"></div></div>
     <div class="info">
@@ -290,8 +305,8 @@ const HEART_10S = `<img src="https://images.weserv.nl/?url=www.globalplayer.com/
 
 // ===================== DATA =====================
 const stations = [
-  { id:'one-fm',    name:'One FM Dance Station', dname:'ONE FM DANCE STATION', country:'Romania',        tags:'DANCE, ELECTRONIC, HOUSE, TECHNO, POP', codec:'AAC', bitrate:'88 kbps',  url:'https://live.onefm.ro/onefm.aacp',             svg:ONE_FM,    listbg:'#1a3aaa', bg:'radial-gradient(ellipse at 50% 15%, #1e3a90 0%, #060e3a 50%, #010205 100%)', fav:true },
-  { id:'heart-10s', name:'Heart 10s',            dname:'HEART 10S',            country:'United Kingdom', tags:'POP, HITS, CHART, 80S, 90S',            codec:'MP3', bitrate:'128 kbps', url:'https://media-ice.musicradio.com/Heart10sMP3',  svg:HEART_10S, listbg:'#1a0a0a', bg:'radial-gradient(ellipse at 50% 15%, #700012 0%, #220005 50%, #020000 100%)', fav:true },
+  { id:'one-fm',    name:'One FM Dance Station', dname:'ONE FM DANCE STATION', country:'Romania',        tags:'DANCE, ELECTRONIC, HOUSE, TECHNO, POP', codec:'AAC', bitrate:'88 kbps',  url:'https://live.onefm.ro/onefm.aacp',             svg:ONE_FM,    bgImg:'https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg',                                                              listbg:'#1a3aaa', bg:'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.3) 0%, rgba(0,0,10,0.85) 60%, #000 100%)', fav:true },
+  { id:'heart-10s', name:'Heart 10s',            dname:'HEART 10S',            country:'United Kingdom', tags:'POP, HITS, CHART, 80S, 90S',            codec:'MP3', bitrate:'128 kbps', url:'https://media-ice.musicradio.com/Heart10sMP3',  svg:HEART_10S, bgImg:'https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png', listbg:'#1a0a0a', bg:'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.3) 0%, rgba(10,0,0,0.85) 60%, #000 100%)', fav:true },
 ];
 let custom=[], curIdx=0, playing=false, loading=false, curTab='favorites', srch='';
 let icyPlayer=null, icyFallback=(typeof IcecastMetadataPlayer==='undefined');
@@ -340,7 +355,8 @@ function loadSt(i) {
   if (i < 0 || i >= a.length) return;
   curIdx = i;
   const s = a[i];
-  document.getElementById('pbg').style.background = s.bg || '#000';
+  document.getElementById('pbg-img').style.backgroundImage = s.bgImg ? `url(${s.bgImg})` : 'none';
+  document.getElementById('pbg-overlay').style.background = s.bg || 'rgba(0,0,0,0.8)';
   document.getElementById('art').innerHTML = s.svg || '';
   document.getElementById('p-codec').textContent = s.codec;
   document.getElementById('p-bitrate').textContent = s.bitrate;
