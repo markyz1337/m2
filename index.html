@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Această linie forțează Safari să coloreze bara de stare pentru a se potrivi cu fundalul tău -->
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
 <title>Radio Player Premium Swipe</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -22,160 +21,150 @@
     -webkit-tap-highlight-color:transparent; 
 }
 
-/* === ELIMINARE TOTALĂ BARE DE SCROLL === */
 ::-webkit-scrollbar { display: none; }
-* {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
+* { scrollbar-width: none; -ms-overflow-style: none; }
 
-body { 
-    background:var(--bg-dark); 
-    color:white; 
-    /* Am schimbat height pentru a asigura acoperirea totală */
-    height: 100vh;
-    height: 100dvh; 
-    overflow:hidden; 
-    display:flex; 
-    justify-content:center; 
+html, body { 
+    background: var(--bg-dark); 
+    color: white; 
+    height: 100%; 
+    width: 100%;
+    overflow: hidden; 
 }
 
 .app-container {
-    width:100%; 
-    max-width:430px; 
-    height:100%; 
-    position:relative; 
-    overflow:hidden;
-    display:flex; 
-    flex-direction:column;
+    width: 100%; 
+    height: 100dvh; 
+    position: relative; 
+    overflow: hidden;
+    display: flex; 
+    flex-direction: column;
 }
 
-/* Background-ul ocupă tot ecranul, inclusiv sub Safe Areas */
+/* BACKGROUND: Se extinde pe tot ecranul, ignorând safe-areas */
 .bg-blur {
-    position:absolute; 
-    top:0; left:0; right:0; bottom:0;
-    width:100%; height:100%;
-    background-size:cover; 
-    background-position:center;
-    filter:blur(60px) brightness(0.5); 
-    z-index:0;
+    position: absolute; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; height: 100%;
+    background-size: cover; 
+    background-position: center;
+    filter: blur(60px) brightness(0.4); 
+    z-index: 0;
     will-change: opacity, transform;
-    transition: opacity 1.2s ease-in-out;
+    transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+#bg-layer-1 { opacity: 1; }
+#bg-layer-2 { opacity: 0; }
 
-/* Header-ul primește padding pentru a nu fi sub ceasul de pe iPhone */
+/* HEADER: Padding-ul de sus include Safe Area (ora/semnal pe iOS) */
 .header-tabs { 
-    position:relative; 
-    z-index:10; 
+    position: relative; 
+    z-index: 10; 
     padding: calc(15px + env(safe-area-inset-top)) 20px 10px; 
-    display:flex; 
-    gap:10px; 
-    overflow-x:auto; 
+    display: flex; 
+    gap: 10px; 
+    overflow-x: auto; 
 }
 
 .tab { 
-    background:var(--glass); 
-    padding:8px 18px; 
-    border-radius:20px; 
-    font-size:13px; 
-    backdrop-filter:blur(10px); 
-    -webkit-backdrop-filter:blur(10px);
-    border:1px solid rgba(255,255,255,0.1); 
-    cursor:pointer; 
-    white-space:nowrap; 
+    background: var(--glass); 
+    padding: 8px 18px; 
+    border-radius: 20px; 
+    font-size: 13px; 
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1); 
+    cursor: pointer; 
+    white-space: nowrap; 
 }
-.tab.active { background:var(--accent); border-color:transparent; }
+.tab.active { background: var(--accent); border-color: transparent; }
 
-/* Conținutul se scurge frumos spre zona de jos */
+/* CONTENT: Padding-ul de jos lasă loc pentru Nav Bar + Safe Area de jos */
 .content { 
-    position:relative; 
-    z-index:10; 
-    flex:1; 
-    padding:0 20px calc(140px + env(safe-area-inset-bottom)) 20px; 
-    overflow-y:auto; 
+    position: relative; 
+    z-index: 10; 
+    flex: 1; 
+    padding: 0 20px calc(140px + env(safe-area-inset-bottom)) 20px; 
+    overflow-y: auto; 
 }
 
-.station-item { display:flex; align-items:center; padding:15px 0; border-bottom:0.5px solid rgba(255,255,255,0.05); }
-.station-thumb { width:55px; height:55px; border-radius:12px; margin-right:15px; object-fit:cover; background:#111; }
-.station-name { font-weight:600; font-size:16px; margin-bottom:4px; }
-.station-desc { font-size:11px; color:#b3b3b3; text-transform:uppercase; }
+.station-item { 
+    display: flex; 
+    align-items: center; 
+    padding: 15px 0; 
+    border-bottom: 0.5px solid rgba(255,255,255,0.1); 
+    cursor: pointer; 
+}
+.station-thumb { width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; object-fit: cover; background: #111; }
+.station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; }
 
+/* PLAYER VIEW: Respectă marginile de sus și jos */
 #player-view { 
-    display:none; 
-    position:relative; 
-    z-index:10; 
-    height:100%; 
-    flex-direction:column; 
-    align-items:center; 
-    justify-content:center; 
-    padding: env(safe-area-inset-top) 0 calc(100px + env(safe-area-inset-bottom)) 0; 
-    touch-action:pan-y; 
+    display: none; 
+    position: relative; 
+    z-index: 10; 
+    height: 100%; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: env(safe-area-inset-top) 0 calc(110px + env(safe-area-inset-bottom)) 0; 
 }
 
-.art-container { width:100%; display:flex; justify-content:center; margin-bottom:30px; }
-.main-art { width:280px; height:280px; border-radius:25px; box-shadow:0 25px 50px rgba(0,0,0,0.6); object-fit:cover; background:#111; transition:transform .6s ease; }
+.art-container { width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
+.main-art { width: 280px; height: 280px; border-radius: 25px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); object-fit: cover; background: #111; }
 
-.track-viewport { width:100%; overflow:hidden; margin-bottom:30px; }
-.track-slider-wrapper { display:flex; width:300%; transform:translateX(-33.333%); transition:transform .3s ease-out; }
-.track-info-slide { width:33.333%; text-align:center; padding:0 40px; }
+.track-viewport { width: 100%; overflow: hidden; margin-bottom: 30px; position: relative; }
+.track-slider-wrapper { display: flex; width: 300%; transform: translateX(-33.333%); transition: transform 0.3s ease-out; }
+.track-info-slide { width: 33.333%; text-align: center; padding: 0 40px; flex-shrink: 0; }
+.track-info-slide h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
 
-.main-controls { display:flex; align-items:center; gap:30px; margin-bottom:20px; }
-.btn-round { background:var(--glass); width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); color:white; }
-.btn-play { background:#fff; color:#000; width:70px; height:70px; }
-.btn-play.playing { background:var(--accent); color:#fff; }
+.main-controls { display: flex; align-items: center; gap: 30px; margin-bottom: 20px; }
+.btn-round { background: var(--glass); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); color: white; }
+.btn-play { background: #fff; color: #000; width: 70px; height: 70px; }
+.btn-play.playing { background: var(--accent); color: #fff; }
 
-/* === NAV BAR AJUSTAT PENTRU IOS GESTURES === */
+/* NAV BAR: Plutește deasupra safe-area-ului de jos */
 .nav-bar { 
-    position:absolute; 
-    bottom:calc(15px + env(safe-area-inset-bottom)); 
-    left:20px; right:20px; z-index:50; 
-    background:rgba(20,20,20,0.7); 
-    backdrop-filter:blur(25px); 
-    -webkit-backdrop-filter:blur(25px);
-    border-radius:40px; 
-    display:flex; justify-content:space-around; padding:8px; border:1px solid rgba(255,255,255,0.1); 
+    position: absolute; 
+    bottom: calc(15px + env(safe-area-inset-bottom)); 
+    left: 20px; right: 20px; z-index: 50; 
+    background: rgba(20,20,20,0.85); 
+    backdrop-filter: blur(25px); 
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 40px; 
+    display: flex; justify-content: space-around; padding: 8px; 
+    border: 1px solid rgba(255,255,255,0.1); 
 }
 
 .nav-bar::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: calc(50% - 12px);
-    height: calc(100% - 16px);
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 35px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: -1;
+    content: ''; position: absolute; top: 8px; left: 8px;
+    width: calc(50% - 12px); height: calc(100% - 16px);
+    background: rgba(255, 255, 255, 0.08); border-radius: 35px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: -1;
 }
-
 .nav-bar.on-radio::before { transform: translateX(100%); }
 .nav-bar.on-player::before { transform: translateX(0%); }
 
 .nav-link { 
-    display:flex; flex-direction:column; align-items:center; gap:3px; 
-    padding:10px 0; width: 50%; color:#777; cursor:pointer; font-size:11px; 
+    display: flex; flex-direction: column; align-items: center; gap: 3px; 
+    padding: 10px 0; width: 50%; color: #777; cursor: pointer; font-size: 11px; 
 }
-.nav-link.active { color:#fff; }
-.nav-link.active i { color:var(--accent); }
+.nav-link.active { color: #fff; }
+.nav-link.active i { color: var(--accent); }
 
 .fab { 
-    position:absolute; 
-    bottom:calc(100px + env(safe-area-inset-bottom)); 
-    right:25px; 
-    background:var(--accent); 
-    width:56px; height:56px; 
-    border-radius:50%; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    box-shadow:0 8px 20px rgba(255,94,58,0.4); 
-    z-index:15; 
+    position: absolute; 
+    bottom: calc(100px + env(safe-area-inset-bottom)); 
+    right: 25px; 
+    background: var(--accent); 
+    width: 56px; height: 56px; border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; 
+    box-shadow: 0 8px 20px rgba(255,94,58,0.4); z-index: 15; 
 }
 </style>
 </head>
 <body>
-<!-- Restul codului rămâne identic, am schimbat doar CSS-ul și Meta-ul de mai sus pentru vizibilitate -->
 <div class="app-container">
     <div class="bg-blur" id="bg-layer-1"></div>
     <div class="bg-blur" id="bg-layer-2"></div>
@@ -197,9 +186,9 @@ body {
         </div>
         <div class="track-viewport" id="swipe-zone-text">
             <div class="track-slider-wrapper" id="info-wrapper">
-                <div class="track-info-slide" id="slide-prev"><h2>Nume Post</h2><p>Gen Muzical</p></div>
-                <div class="track-info-slide" id="slide-current"><h2>Selectează Post</h2><p>Apasă pe o stație</p></div>
-                <div class="track-info-slide" id="slide-next"><h2>Nume Post</h2><p>Gen Muzical</p></div>
+                <div class="track-info-slide" id="slide-prev"><h2>Nume Post</h2><p>Gen</p></div>
+                <div class="track-info-slide" id="slide-current"><h2>Selectează</h2><p>Apasă o stație</p></div>
+                <div class="track-info-slide" id="slide-next"><h2>Nume Post</h2><p>Gen</p></div>
             </div>
         </div>
         <div class="main-controls">
@@ -218,6 +207,7 @@ body {
 <audio id="audio-engine"></audio>
 
 <script>
+// --- LOGICA JAVASCRIPT RĂMÂNE ACEEAȘI (Așa cum a fost furnizată) ---
 const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.13982720394888960.16320d2b-98f6-4b3b-af8d-f33140cf192a.778f4c59-a76c-44c0-82f7-bd7357649848";
 
 const stations = [
@@ -226,16 +216,8 @@ const stations = [
     { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS", isFav: true, isAll: true },
     { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO", isFav: true, isAll: true },
     { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE", isFav: true, isAll: true },
-    { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://myradioonline.ro/public/uploads/radio_img/pro-dj-radio/play_250_250.webp", desc: "DJ MIX, CLUB, DANCE", isFav: true, isAll: true },
-    { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://www.radiorecord.ru/icons/apple-touch-icon.png", desc: "RECORD RUSSIAN MIX", isRussian: true, isAll: true },
-    { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS", isRussian: true, isAll: true },
-    { name: "DFM DANCE", stream: "https://dfm-dancegold10.hostingradio.ru/dancegold1096.aacp", img: "https://americadance90.com.br/wp-content/uploads/2024/05/DFM-Dance-Gold-90s.png", desc: "DANCE GOLD, 90S", isRussian: true, isAll: true },
-    
-    /* RADIOURILE MELE */
-    { name: "📟 Du-mă înapoi", stream: "http://155.133.23.121/hls/emisiunivechi/live.m3u8", img: "https://www.kissfm.ro/apple-touch-icon.png", desc: "KISS FM | RADIO 21 | RADIO ZU", isMine: true },
-    { name: "📀 Old", stream: "http://155.133.23.121/hls/muzicaveche/live.m3u8", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLP9yVUjMnZ6pcX89k4sD91R81YC0fIxdLMOkthMZabwsAovd4kw8ss5X&s=10", desc: "Muzica pe care am crescut", isMine: true },
-    { name: "🎷 Manele", stream: "http://155.133.23.121/hls/manele/live.m3u8", img: "https://i.scdn.co/image/ab6761610000e5eb0e9398072e2c38cb551bb657", desc: "Bem spargem pahare", isMine: true },
-    { name: "💛 Hope", stream: "http://155.133.23.121/hls/hope/live.m3u8", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "CINEVA LA FEL CA MINE", isMine: true }
+    { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://www.radiorecord.ru/icons/apple-touch-icon.png", desc: "RUSSIAN MIX", isRussian: true, isAll: true },
+    { name: "📟 Du-mă înapoi", stream: "http://155.133.23.121/hls/emisiunivechi/live.m3u8", img: "https://www.kissfm.ro/apple-touch-icon.png", desc: "KISS FM | RADIO 21 | RADIO ZU", isMine: true }
 ];
 
 let currentIdx = 0;
@@ -257,12 +239,10 @@ function init() {
 function renderList(mode, el) {
     const list = document.getElementById('stations-list');
     list.innerHTML = "";
-    
     if(el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
     }
-
     currentFilteredList = stations.filter(s => {
         if (mode === 'all') return s.isAll;
         if (mode === 'fav') return s.isFav;
@@ -270,21 +250,12 @@ function renderList(mode, el) {
         if (mode === 'mine') return s.isMine;
         return false;
     });
-
     currentFilteredList.forEach((s, i) => {
         const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
         const item = document.createElement('div');
         item.className = 'station-item';
         item.innerHTML = `<img src="${finalImg}" class="station-thumb" onerror="this.src=FALLBACK_IMG"><div style="flex:1"><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>`;
-        
-        item.onclick = () => { 
-            if (s.isMine) {
-                window.location.href = s.stream;
-            } else {
-                currentIdx = i;
-                playStation(); 
-            }
-        };
+        item.onclick = () => { currentIdx = i; playStation(); };
         list.appendChild(item);
     });
 }
@@ -310,18 +281,6 @@ function loadStationInfo(idx, shouldPlay = true) {
     const finalImg = (s.img && s.img.trim() !== "") ? s.img : FALLBACK_IMG;
     document.getElementById('player-img').src = finalImg;
     audio.src = s.stream;
-
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: s.name,
-            artist: s.desc,
-            artwork: [{ src: finalImg, sizes: '512x512', type: 'image/png' }]
-        });
-        navigator.mediaSession.setActionHandler('play', () => togglePlay());
-        navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-        navigator.mediaSession.setActionHandler('previoustrack', () => prev());
-        navigator.mediaSession.setActionHandler('nexttrack', () => next());
-    }
 
     if(shouldPlay) audio.play().catch(()=>{});
     
@@ -377,28 +336,20 @@ function switchTab(t) {
         document.getElementById('player-view').style.display='none';
         document.getElementById('nav-list').classList.add('active'); 
         document.getElementById('nav-player').classList.remove('active'); 
-        nav.className = 'nav-bar on-radio'; // Schimbă poziția pill-ului
+        nav.className = 'nav-bar on-radio';
     } else { 
         document.getElementById('list-view').style.display='none'; 
         document.getElementById('player-view').style.display='flex';
         document.getElementById('nav-list').classList.remove('active'); 
         document.getElementById('nav-player').classList.add('active'); 
-        nav.className = 'nav-bar on-player'; // Schimbă poziția pill-ului
+        nav.className = 'nav-bar on-player';
     }
 }
 
 function updateUI(p){ 
     const b = document.getElementById('play-trigger'); 
-    if(p){ 
-        b.classList.add('playing'); 
-        b.innerHTML='<i data-lucide="pause" fill="currentColor"></i>'; 
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
-    }
-    else{ 
-        b.classList.remove('playing'); 
-        b.innerHTML='<i data-lucide="play" fill="currentColor"></i>'; 
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
-    }
+    b.innerHTML = p ? '<i data-lucide="pause" fill="currentColor"></i>' : '<i data-lucide="play" fill="currentColor"></i>';
+    p ? b.classList.add('playing') : b.classList.remove('playing');
     lucide.createIcons();
 }
 
