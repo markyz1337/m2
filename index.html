@@ -30,40 +30,40 @@ body { height:100%; height:-webkit-fill-available; min-height:-webkit-fill-avail
 .pbg { position:absolute; inset:0; z-index:0; transition:background 0.7s ease; }
 .pc { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; }
 
-.art-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:24px 0 8px; min-height:0; }
-.art-svg { width:min(72vw,300px); aspect-ratio:1; filter:drop-shadow(0 10px 60px rgba(0,0,0,0.7)); overflow:hidden; border-radius:22px; }
+.art-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:12px 0 4px; min-height:0; max-height:40vh; }
+.art-svg { width:min(50vw,210px); aspect-ratio:1; filter:drop-shadow(0 8px 40px rgba(0,0,0,0.7)); overflow:hidden; border-radius:16px; }
 .art-svg svg, .art-svg img { width:100%; height:100%; display:block; }
 
-.info { padding:6px 24px 2px; text-align:center; }
-.smeta { display:flex; align-items:center; justify-content:center; gap:6px; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:5px; }
+.info { padding:4px 24px 0; text-align:center; }
+.smeta { display:flex; align-items:center; justify-content:center; gap:6px; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px; }
 
 /* station name shown under smeta when song is playing */
-.st-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.5); margin-bottom:4px; letter-spacing:0.3px; }
+.st-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.5); margin-bottom:2px; letter-spacing:0.3px; }
 
 /* song info block */
-#song-block .s-title { font-size:22px; font-weight:800; letter-spacing:0.3px; line-height:1.1; }
-#song-block .s-artist { font-size:15px; color:rgba(255,255,255,0.7); margin-top:3px; }
-#song-block .s-album  { font-size:13px; color:rgba(255,255,255,0.38); margin-top:2px; }
+#song-block .s-title { font-size:20px; font-weight:800; letter-spacing:0.3px; line-height:1.1; }
+#song-block .s-artist { font-size:14px; color:rgba(255,255,255,0.7); margin-top:2px; }
+#song-block .s-album  { font-size:12px; color:rgba(255,255,255,0.38); margin-top:1px; }
 
 /* fallback station info */
-#fallback-block .st-big  { font-size:20px; font-weight:800; letter-spacing:0.4px; }
-#fallback-block .st-tags { font-size:12px; color:rgba(255,255,255,0.42); margin-top:3px; letter-spacing:0.4px; }
-#fallback-block .st-ctr  { font-size:12px; color:rgba(255,255,255,0.42); letter-spacing:0.4px; }
+#fallback-block .st-big  { font-size:18px; font-weight:800; letter-spacing:0.4px; }
+#fallback-block .st-tags { font-size:11px; color:rgba(255,255,255,0.42); margin-top:2px; letter-spacing:0.4px; }
+#fallback-block .st-ctr  { font-size:11px; color:rgba(255,255,255,0.42); letter-spacing:0.4px; }
 
 /* controls */
-.ctrl-row { display:flex; align-items:center; justify-content:center; gap:28px; padding:14px 24px 4px; }
+.ctrl-row { display:flex; align-items:center; justify-content:center; gap:28px; padding:8px 24px 2px; }
 .ctrl { background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer; padding:6px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s,transform .1s; }
 .ctrl:hover { color:#fff; }
 .ctrl:active { transform:scale(.9); }
-.ctrl-play { width:64px; height:64px; background:rgba(255,255,255,0.16); border:none; border-radius:18px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .1s; backdrop-filter:blur(8px); }
+.ctrl-play { width:56px; height:56px; background:rgba(255,255,255,0.16); border:none; border-radius:15px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .1s; backdrop-filter:blur(8px); }
 .ctrl-play:hover { background:rgba(255,255,255,0.26); }
 .ctrl-play:active { transform:scale(.92); }
 
-.live-row { display:flex; align-items:center; gap:10px; padding:2px 24px 2px; }
+.live-row { display:flex; align-items:center; gap:10px; padding:4px 24px 2px; }
 .ll { flex:1; height:2px; background:rgba(255,255,255,0.12); border-radius:2px; }
 .ltag { font-size:10px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.35); }
 
-.act-row { display:flex; align-items:center; justify-content:space-between; padding:6px 26px 12px; }
+.act-row { display:flex; align-items:center; justify-content:space-between; padding:2px 26px 10px; }
 .abt { background:none; border:none; color:rgba(255,255,255,0.45); cursor:pointer; padding:8px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .15s; }
 .abt:hover { color:#fff; }
 .abt.fav-on { color:#e03060; }
