@@ -19,14 +19,8 @@
     --bg-dark: #000000;
 }
 
-/* FIX BARA NEAGRA: Fundal forțat pe html și body + position fixed */
-html, body { 
-    background: var(--bg-dark); 
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    position: fixed; /* Previne bounce-ul care arată fundalul alb/negru în PWA */
-}
+/* FIX BARA NEAGRA - SINGURA MODIFICARE STRUCTURALA */
+html { background: var(--bg-dark); height: -webkit-fill-available; }
 
 * { 
     box-sizing: border-box; 
@@ -42,18 +36,23 @@ html, body {
 * { scrollbar-width: none; -ms-overflow-style: none; }
 
 body { 
+    background: var(--bg-dark); 
     color: white; 
+    height: 100vh; /* Fallback */
+    height: -webkit-fill-available; 
+    width: 100vw;
+    overflow: hidden; 
     display: flex; 
     justify-content: center;
-    touch-action: pan-y; 
+    touch-action: pan-y;
+    position: fixed; /* Blochează bounce-ul care arată albul/negru sub aplicație */
 }
 
 .app-container {
-    width: 100%; max-width: 430px; height: 100dvh; position: relative; overflow: hidden;
+    width: 100%; max-width: 430px; height: 100%; position: relative; overflow: hidden;
     display: flex; flex-direction: column;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
-    background: var(--bg-dark);
 }
 
 .bg-blur {
@@ -203,7 +202,6 @@ border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), tran
 <audio id="audio-engine" preload="auto" crossorigin="anonymous"></audio>
 
 <script>
-// --- CONFIGURARE ȘI VARIABILE ---
 let currentIdx = 0;
 let currentFilteredList = []; 
 let activeLayer = 1;
@@ -234,18 +232,8 @@ const stations = [
 
 stations.forEach(s => s.originalDesc = s.desc);
 
-// RESETARE TOTALA LA INTRARE
-window.onload = () => {
-    window.scrollTo(0, 0);
-    currentIdx = 0;
-    switchTab('list');
-    renderList('all', document.getElementById('tab-all'));
-    init();
-    // Mic delay pentru a forța browserul să recalculeze layout-ul corect în PWA
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-};
-
 function init() {
+    renderList('all', document.getElementById('tab-all')); 
     lucide.createIcons();
     updateSliderText();
     loadStationInfo(0, false);
@@ -510,6 +498,8 @@ function updateUI(state){
     else{ b.innerHTML='<i data-lucide="play" fill="currentColor"></i>'; b.classList.remove('playing'); }
     lucide.createIcons();
 }
+
+init();
 </script>
 </body>
 </html>
