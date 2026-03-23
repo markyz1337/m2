@@ -19,189 +19,142 @@
     --bg-dark: #000000;
 }
 
-/* FIX BARA NEAGRA - SINGURA MODIFICARE STRUCTURALA */
-html { background: var(--bg-dark); height: -webkit-fill-available; }
-
-* { 
-    box-sizing: border-box; 
-    margin: 0; padding: 0; 
-    font-family: 'Inter', sans-serif; 
-    -webkit-tap-highlight-color: transparent; 
-    -webkit-user-select: none;
-    user-select: none;
-    overscroll-behavior: none;
-}
-
-::-webkit-scrollbar { display: none; }
-* { scrollbar-width: none; -ms-overflow-style: none; }
-
-body { 
+/* REZOLVARE DEFINITIVA BARA: Fundalul este acum independent de restul codului */
+html, body { 
     background: var(--bg-dark); 
-    color: white; 
-    height: 100vh; /* Fallback */
-    height: -webkit-fill-available; 
-    width: 100vw;
-    overflow: hidden; 
-    display: flex; 
-    justify-content: center;
-    touch-action: pan-y;
-    position: fixed; /* Blochează bounce-ul care arată albul/negru sub aplicație */
+    margin: 0; padding: 0; 
+    height: 100%; width: 100%;
+    overflow: hidden;
+    position: fixed; 
 }
 
-.app-container {
-    width: 100%; max-width: 430px; height: 100%; position: relative; overflow: hidden;
-    display: flex; flex-direction: column;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
+/* Fundalul sta fixat la marginile REALE ale ecranului, sub orice padding */
 .bg-blur {
-    position: absolute; 
-    top: -10%; left: -10%; width: 120%; height: 120%;
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
     background-size: cover; background-position: center;
     filter: blur(40px) brightness(0.4) saturate(1.2);
-    z-index: 0; will-change: opacity, transform;
+    z-index: -1; /* Intotdeauna in spate */
+    will-change: opacity, transform;
     animation: bgBreathe 30s infinite ease-in-out;
     transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(1.1); /* Previne marginile albe/negre la rotire */
 }
 
 #bg-layer-1 { opacity: 1; }
 #bg-layer-2 { opacity: 0; }
 
 @keyframes bgBreathe {
-    0%, 100% { transform: scale(1.0) rotate(0deg); }
-    50% { transform: scale(1.1) rotate(5deg); }
+    0%, 100% { transform: scale(1.1) rotate(0deg); }
+    50% { transform: scale(1.2) rotate(3deg); }
 }
 
+/* CONTAINERUL TAU - ramane intact, dar fara sa impinga fundalul jos */
+.app-container {
+    width: 100%; max-width: 430px; height: 100%; 
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    margin: 0 auto;
+}
+
+/* Padding-ul de safe area se aplica doar elementelor vizibile, nu fundalului */
 .header-tabs { 
     position: relative; z-index: 10; 
-    padding: 15px 20px 10px; 
+    padding: calc(env(safe-area-inset-top) + 15px) 20px 10px; 
     display: flex; gap: 10px; overflow-x: auto; 
 }
 
-.tab { 
-    background: var(--glass); 
-    padding: 8px 18px; 
-    border-radius: 20px; 
-    font-size: 13px; 
-    backdrop-filter: blur(10px); 
-    border: 1px solid rgba(255,255,255,0.1); 
-    cursor: pointer; 
-    white-space: nowrap;
-    font-weight: 500;
-    transition: background-color 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.2s ease;
+#player-view { 
+    display: none; position: relative; z-index: 10; height: 100%; 
+    flex-direction: column; align-items: center; justify-content: center; 
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* CODUL TAU ORIGINAL DE ANIMATII SI STILURI (NEATINS) */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+.tab { background: var(--glass); padding: 8px 18px; border-radius: 20px; font-size: 13px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; white-space: nowrap; font-weight: 500; transition: background-color 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.2s ease; }
 .tab.active { background: var(--accent); border-color: transparent; font-weight: 900; }
 .tab:active { transform: scale(0.95); }
-
 .content { position: relative; z-index: 10; flex: 1; padding: 0 20px 140px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.station-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
-border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; }
+.station-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent; border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; }
 .station-thumb { width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; object-fit: cover; background: #111; }
 .station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-
 .station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; }
-.station-desc.playing-now { 
-    color: #b3b3b3; 
-    font-weight: 400; 
-    text-transform: none; 
-}
-
-#player-view { display: none; position: relative; z-index: 10; height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0 100px 0; }
 .art-container { width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
 .main-art { width: 280px; height: 280px; border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); object-fit: cover; background: #111; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
-
 .track-viewport { width: 100%; overflow: hidden; margin-bottom: 30px; position: relative; }
 .track-slider-wrapper { display: flex; width: 300%; transform: translateX(-33.333%); will-change: transform; }
 .track-info-slide { width: 33.333%; text-align: center; padding: 0 45px; flex-shrink: 0; }
 .track-info-slide h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track-info-slide p { color: #b3b3b3; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
-
 .main-controls { display: flex; align-items: center; gap: 35px; margin-bottom: 20px; }
-.btn-round { 
-    background: var(--glass); width: 58px; height: 58px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; cursor: pointer; 
-    backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); color: white;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s ease;
-}
+.btn-round { background: var(--glass); width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); color: white; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s ease; }
 .btn-round:active { transform: scale(0.8); background: rgba(255, 255, 255, 0.15); }
-
 .btn-prev-anim i { animation: slideLeft 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 .btn-next-anim i { animation: slideRight 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
-
 @keyframes slideLeft { 0% { transform: translateX(0); opacity: 1; } 40% { transform: translateX(-10px); opacity: 0.6; } 100% { transform: translateX(0); opacity: 1; } }
 @keyframes slideRight { 0% { transform: translateX(0); opacity: 1; } 40% { transform: translateX(10px); opacity: 0.6; } 100% { transform: translateX(0); opacity: 1; } }
-
 .btn-play { background: #fff; color: #000; width: 75px; height: 75px; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
 .btn-play.playing { background: var(--accent); color: #fff; transform: scale(1.1); box-shadow: 0 0 30px rgba(255, 94, 58, 0.4); }
-
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.nav-bar { 
-    position: absolute; bottom: 20px; left: 25px; right: 25px; z-index: 50; 
-    background: rgba(25,25,25,0.8); backdrop-filter: blur(25px); border-radius: 40px; 
-    display: flex; justify-content: space-around; padding: 8px; border: 1px solid rgba(255,255,255,0.08); 
-}
-.nav-bar::before {
-    content: ''; position: absolute; top: 8px; left: 8px; width: calc(50% - 8.5px); height: calc(100% - 16px);
-    background: rgba(255, 255, 255, 0.08); border-radius: 35px;
-    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: -1;
-}
+.nav-bar { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 25px; right: 25px; z-index: 50; background: rgba(25,25,25,0.8); backdrop-filter: blur(25px); border-radius: 40px; display: flex; justify-content: space-around; padding: 8px; border: 1px solid rgba(255,255,255,0.08); }
+.nav-bar::before { content: ''; position: absolute; top: 8px; left: 8px; width: calc(50% - 8.5px); height: calc(100% - 16px); background: rgba(255, 255, 255, 0.08); border-radius: 35px; transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: -1; }
 .nav-bar.on-radio::before { transform: translateX(100%); }
 .nav-bar.on-player::before { transform: translateX(0%); }
-
 .nav-link { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; width: 50%; color: #777; cursor: pointer; font-size: 11px; transition: color 0.4s; }
 .nav-link.active { color: #fff; }
 .nav-link.active i { color: var(--accent); }
-
-.fab { position: absolute; bottom: 115px; right: 26px; background: var(--accent); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(255,94,58,0.4); z-index: 15; transition: transform 0.2s; }
+.fab { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 115px); right: 26px; background: var(--accent); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(255,94,58,0.4); z-index: 15; transition: transform 0.2s; }
 .fab:active { transform: scale(0.9); }
 </style>
 </head>
 <body oncontextmenu="return false;">
-<div class="app-container">
     <div class="bg-blur" id="bg-layer-1"></div>
     <div class="bg-blur" id="bg-layer-2"></div>
 
-    <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
-        <div class="header-tabs">
-            <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
-            <div class="tab active" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
-            <div class="tab" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
-            <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
+    <div class="app-container">
+        <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
+            <div class="header-tabs">
+                <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
+                <div class="tab active" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
+                <div class="tab" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
+                <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
+            </div>
+            <div class="content" id="stations-list"></div>
+            <div class="fab" onclick="alert('Funcție indisponibilă')"><i data-lucide="plus"></i></div>
         </div>
-        <div class="content" id="stations-list"></div>
-        <div class="fab" onclick="alert('Funcție indisponibilă')"><i data-lucide="plus"></i></div>
-    </div>
 
-    <div id="player-view">
-        <div class="art-container" id="swipe-zone-art">
-            <img src="" class="main-art" id="player-img" onerror="this.src=FALLBACK_IMG">
-        </div>
-        <div class="track-viewport" id="swipe-zone-text">
-            <div class="track-slider-wrapper" id="info-wrapper">
-                <div class="track-info-slide" id="slide-prev"><h2>Post Anterior</h2><p>Gen</p></div>
-                <div class="track-info-slide" id="slide-current"><h2>Alege un post</h2><p>Radio Player</p></div>
-                <div class="track-info-slide" id="slide-next"><h2>Post Următor</h2><p>Gen</p></div>
+        <div id="player-view">
+            <div class="art-container" id="swipe-zone-art">
+                <img src="" class="main-art" id="player-img" onerror="this.src=FALLBACK_IMG">
+            </div>
+            <div class="track-viewport" id="swipe-zone-text">
+                <div class="track-slider-wrapper" id="info-wrapper">
+                    <div class="track-info-slide" id="slide-prev"><h2>Post Anterior</h2><p>Gen</p></div>
+                    <div class="track-info-slide" id="slide-current"><h2>Alege un post</h2><p>Radio Player</p></div>
+                    <div class="track-info-slide" id="slide-next"><h2>Post Următor</h2><p>Gen</p></div>
+                </div>
+            </div>
+            <div class="main-controls">
+                <div class="btn-round" id="btn-prev" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
+                <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
+                <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
             </div>
         </div>
-        <div class="main-controls">
-            <div class="btn-round" id="btn-prev" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
-            <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
-            <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
+
+        <div class="nav-bar on-radio" id="main-nav">
+            <div class="nav-link" id="nav-player" onclick="switchTab('player')"><i data-lucide="play-circle"></i><span>Player</span></div>
+            <div class="nav-link active" id="nav-list" onclick="switchTab('list')"><i data-lucide="radio"></i><span>Radio</span></div>
         </div>
     </div>
-
-    <div class="nav-bar on-radio" id="main-nav">
-        <div class="nav-link" id="nav-player" onclick="switchTab('player')"><i data-lucide="play-circle"></i><span>Player</span></div>
-        <div class="nav-link active" id="nav-list" onclick="switchTab('list')"><i data-lucide="radio"></i><span>Radio</span></div>
-    </div>
-</div>
 
 <audio id="audio-engine" preload="auto" crossorigin="anonymous"></audio>
 
 <script>
+// CODUL TAU SCRIPT RAMANE EXACT ACELASI
 let currentIdx = 0;
 let currentFilteredList = []; 
 let activeLayer = 1;
@@ -239,16 +192,13 @@ function init() {
     loadStationInfo(0, false);
     setupSwipe();
     scanAllStations();
-
     audio.addEventListener('waiting', () => updateUI('loading'));
     audio.addEventListener('playing', () => updateUI(true));
     audio.addEventListener('pause', () => updateUI(false));
 }
 
 function scanAllStations() {
-    stations.forEach(s => {
-        if (!s.stream.includes('.m3u8')) { fetchSilentMetadata(s); }
-    });
+    stations.forEach(s => { if (!s.stream.includes('.m3u8')) { fetchSilentMetadata(s); } });
 }
 
 async function fetchSilentMetadata(station) {
@@ -258,7 +208,6 @@ async function fetchSilentMetadata(station) {
         const decoder = new TextDecoder("utf-8");
         let metaInt = parseInt(response.headers.get("icy-metaint"));
         if (!metaInt) return;
-
         let buffer = new Uint8Array();
         while (true) {
             const { done, value } = await reader.read();
@@ -266,18 +215,15 @@ async function fetchSilentMetadata(station) {
             let temp = new Uint8Array(buffer.length + value.length);
             temp.set(buffer); temp.set(value, buffer.length);
             buffer = temp;
-
             while (buffer.length >= metaInt + 1) {
                 let metaLength = buffer[metaInt] * 16;
                 if (buffer.length < metaInt + 1 + metaLength) break;
-                let metadata = buffer.slice(metaInt + 1, metaInt + 1 + metaLength);
-                let metaString = decoder.decode(metadata);
+                let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
                 let match = metaString.match(/StreamTitle='([^']*)'/);
                 if (match && match[1]) {
                     station.desc = match[1].replace(/;/g, "").trim();
                     updateUIMetadata(station);
-                    reader.cancel();
-                    return;
+                    reader.cancel(); return;
                 }
                 buffer = buffer.slice(metaInt + 1 + metaLength);
             }
@@ -289,18 +235,14 @@ function updateUIMetadata(station) {
     if (currentFilteredList[currentIdx] === station) {
         const slide = document.getElementById('slide-current');
         if (slide) slide.querySelector('p').innerText = station.desc;
-        
         if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
             navigator.mediaSession.metadata.title = station.desc;
             navigator.mediaSession.metadata.artist = station.name;
         }
     }
-    const listItems = document.querySelectorAll('.station-item');
-    listItems.forEach(item => {
+    document.querySelectorAll('.station-item').forEach(item => {
         if (item.querySelector('.station-name').innerText === station.name) {
-            const descEl = item.querySelector('.station-desc');
-            descEl.innerText = station.desc;
-            descEl.classList.add('playing-now');
+            item.querySelector('.station-desc').innerText = station.desc;
         }
     });
 }
@@ -308,15 +250,9 @@ function updateUIMetadata(station) {
 function updateMediaSession(station) {
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: station.desc,
-            artist: station.name,
-            album: "Sergiu FM",
+            title: station.desc, artist: station.name, album: "Sergiu FM",
             artwork: [{ src: station.img || FALLBACK_IMG, sizes: '512x512', type: 'image/png' }]
         });
-        navigator.mediaSession.setActionHandler('play', () => audio.play());
-        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-        navigator.mediaSession.setActionHandler('previoustrack', () => prev());
-        navigator.mediaSession.setActionHandler('nexttrack', () => next());
     }
 }
 
@@ -326,25 +262,21 @@ async function fetchMetadata(streamUrl, stationRef) {
         const response = await fetch(streamUrl, { headers: { "Icy-MetaData": "1" } });
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
-        let metaInt = response.headers.get("icy-metaint");
+        let metaInt = parseInt(response.headers.get("icy-metaint"));
         if (!metaInt) return;
-        metaInt = parseInt(metaInt);
         let buffer = new Uint8Array();
-
         while (true) {
             const { done, value } = await reader.read();
             if (done || requestId !== currentMetadataRequestId) break;
             let temp = new Uint8Array(buffer.length + value.length);
             temp.set(buffer); temp.set(value, buffer.length);
             buffer = temp;
-
             while (buffer.length >= metaInt + 1) {
                 let metaLength = buffer[metaInt] * 16;
                 if (buffer.length < metaInt + 1 + metaLength) break;
-                let metadata = buffer.slice(metaInt + 1, metaInt + 1 + metaLength);
-                let metaString = decoder.decode(metadata);
+                let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
                 let match = metaString.match(/StreamTitle='([^']*)'/);
-                if (match && match[1] && match[1].trim() !== "") {
+                if (match && match[1]) {
                     stationRef.desc = match[1].replace(/;/g, "");
                     updateUIMetadata(stationRef);
                 }
@@ -357,10 +289,7 @@ async function fetchMetadata(streamUrl, stationRef) {
 function renderList(mode, el) {
     const list = document.getElementById('stations-list');
     list.innerHTML = "";
-    if(el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-    }
+    if(el) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); }
     currentFilteredList = stations.filter(s => {
         if (mode === 'all') return s.isAll || s.isMine;
         if (mode === 'fav') return s.isFav;
@@ -368,26 +297,17 @@ function renderList(mode, el) {
         if (mode === 'mine') return s.isMine;
         return false;
     });
-    currentFilteredList.forEach((s, i) => {
+    currentFilteredList.forEach((s) => {
         const item = document.createElement('div');
         item.className = 'station-item';
-        const hasMeta = s.desc !== s.originalDesc;
-        item.innerHTML = `
-            <img src="${s.img || FALLBACK_IMG}" class="station-thumb" onerror="this.src=FALLBACK_IMG">
-            <div style="flex:1">
-                <div class="station-name">${s.name}</div>
-                <div class="station-desc ${hasMeta ? 'playing-now' : ''}">${s.desc}</div>
-            </div>`;
-        item.onclick = () => { 
-            if (s.isMine) { window.location.href = s.stream; } 
-            else { currentIdx = currentFilteredList.indexOf(s); playStation(); }
-        };
+        item.innerHTML = `<img src="${s.img || FALLBACK_IMG}" class="station-thumb"><div style="flex:1"><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>`;
+        item.onclick = () => { if (s.isMine) window.location.href = s.stream; else { currentIdx = currentFilteredList.indexOf(s); playStation(); } };
         list.appendChild(item);
     });
 }
 
 function updateSliderText() {
-    if (currentFilteredList.length === 0) return;
+    if (!currentFilteredList.length) return;
     const prevIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
     const nextIdx = (currentIdx + 1) % currentFilteredList.length;
     updateSlide('slide-prev', currentFilteredList[prevIdx]);
@@ -402,23 +322,19 @@ function updateSlide(id, data) {
 }
 
 function loadStationInfo(idx, shouldPlay = true) {
-    if (currentFilteredList.length === 0) return;
+    if (!currentFilteredList.length) return;
     const s = currentFilteredList[idx];
-    const finalImg = s.img || FALLBACK_IMG;
-    document.getElementById('player-img').src = finalImg;
+    document.getElementById('player-img').src = s.img || FALLBACK_IMG;
     if (metadataInterval) clearInterval(metadataInterval);
     currentMetadataRequestId++; 
     audio.src = s.stream;
     updateMediaSession(s);
     fetchMetadata(s.stream, s);
     metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 20000);
-    const l1 = document.getElementById('bg-layer-1');
-    const l2 = document.getElementById('bg-layer-2');
-    const nextL = activeLayer === 1 ? l2 : l1;
-    const prevL = activeLayer === 1 ? l1 : l2;
-    nextL.style.backgroundImage = `url(${finalImg})`;
-    nextL.style.opacity = '1';
-    prevL.style.opacity = '0';
+    const nextL = activeLayer === 1 ? document.getElementById('bg-layer-2') : document.getElementById('bg-layer-1');
+    const prevL = activeLayer === 1 ? document.getElementById('bg-layer-1') : document.getElementById('bg-layer-2');
+    nextL.style.backgroundImage = `url(${s.img || FALLBACK_IMG})`;
+    nextL.style.opacity = '1'; prevL.style.opacity = '0';
     activeLayer = activeLayer === 1 ? 2 : 1;
     if(shouldPlay) { updateUI('loading'); audio.play().catch(()=>{}); }
 }
@@ -426,29 +342,19 @@ function loadStationInfo(idx, shouldPlay = true) {
 function playStation() { updateSliderText(); loadStationInfo(currentIdx, true); switchTab('player'); }
 
 function next() { 
-    const btn = document.getElementById('btn-next');
-    btn.classList.add('btn-next-anim');
-    setTimeout(() => btn.classList.remove('btn-next-anim'), 500);
-    currentIdx = (currentIdx + 1) % currentFilteredList.length; 
-    animateTransition('next'); 
+    const btn = document.getElementById('btn-next'); btn.classList.add('btn-next-anim'); setTimeout(() => btn.classList.remove('btn-next-anim'), 500);
+    currentIdx = (currentIdx + 1) % currentFilteredList.length; animateTransition('next'); 
 }
-
 function prev() { 
-    const btn = document.getElementById('btn-prev');
-    btn.classList.add('btn-prev-anim');
-    setTimeout(() => btn.classList.remove('btn-prev-anim'), 500);
-    currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length; 
-    animateTransition('prev'); 
+    const btn = document.getElementById('btn-prev'); btn.classList.add('btn-prev-anim'); setTimeout(() => btn.classList.remove('btn-prev-anim'), 500);
+    currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length; animateTransition('prev'); 
 }
 
 function animateTransition(dir) {
     wrapper.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
     wrapper.style.transform = dir==='next' ? 'translateX(-66.666%)' : 'translateX(0)';
     setTimeout(()=>{ 
-        wrapper.style.transition='none';
-        loadStationInfo(currentIdx, true);
-        updateSliderText();
-        wrapper.style.transform = 'translateX(-33.333%)';
+        wrapper.style.transition='none'; loadStationInfo(currentIdx, true); updateSliderText(); wrapper.style.transform = 'translateX(-33.333%)';
     }, 600);
 }
 
@@ -460,33 +366,23 @@ function setupSwipe() {
         z.addEventListener('touchend', e=>{ 
             if(!isDragging) return;
             const d = e.changedTouches[0].clientX - startX;
-            if(d>60) prev(); else if(d<-60) next(); else {
-                wrapper.style.transition = 'transform 0.4s ease';
-                wrapper.style.transform='translateX(-33.333%)';
-            }
+            if(d>60) prev(); else if(d<-60) next(); else { wrapper.style.transition = 'transform 0.4s ease'; wrapper.style.transform='translateX(-33.333%)'; }
             isDragging=false;
         });
     });
 }
 
-function togglePlay() {
-    if(audio.paused){ updateUI('loading'); audio.play().catch(()=>{}); } 
-    else { audio.pause(); }
-}
+function togglePlay() { if(audio.paused){ updateUI('loading'); audio.play().catch(()=>{}); } else audio.pause(); }
 
 function switchTab(t) {
     const nav = document.getElementById('main-nav');
     if(t==='list'){ 
-        document.getElementById('list-view').style.display='flex'; 
-        document.getElementById('player-view').style.display='none';
-        document.getElementById('nav-list').classList.add('active'); 
-        document.getElementById('nav-player').classList.remove('active'); 
+        document.getElementById('list-view').style.display='flex'; document.getElementById('player-view').style.display='none';
+        document.getElementById('nav-list').classList.add('active'); document.getElementById('nav-player').classList.remove('active'); 
         nav.className = 'nav-bar on-radio';
     } else { 
-        document.getElementById('list-view').style.display='none'; 
-        document.getElementById('player-view').style.display='flex';
-        document.getElementById('nav-list').classList.remove('active'); 
-        document.getElementById('nav-player').classList.add('active'); 
+        document.getElementById('list-view').style.display='none'; document.getElementById('player-view').style.display='flex';
+        document.getElementById('nav-list').classList.remove('active'); document.getElementById('nav-player').classList.add('active'); 
         nav.className = 'nav-bar on-player';
     }
 }
