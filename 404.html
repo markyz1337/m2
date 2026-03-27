@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sergiu FM</title>
+    <script type="text/javascript">
+      // Luăm calea care a generat eroarea 404 (ex: /hope)
+      var pathSegment = window.location.pathname;
+      // Redirecționăm către index.html și punem calea ca un parametru special
+      window.location.replace(
+        window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') +
+        '/?p=' + encodeURIComponent(pathSegment)
+      );
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
