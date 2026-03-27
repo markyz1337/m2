@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
@@ -8,30 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-180.png">
-
-<!-- ✅ FIX 1: Manifest PWA -->
-
-<link rel="manifest" href="manifest.json">
-
-<!-- ✅ FIX 2: Meta-tag-uri optimizate pentru Full Screen stabil -->
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Sergiu FM">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#ff5e3a">
 
 <script src="https://unpkg.com/lucide@latest"></script>
-
 <style>
-/* ✅ FIX 2: Poziționare fixă pentru a bloca orice scroll care declanșează bara */
-html, body {
-    position: fixed;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-}
-
 :root {
     --accent: #ff5e3a;
     --glass: rgba(255, 255, 255, 0.1);
@@ -62,6 +43,15 @@ body {
     touch-action: pan-y; 
 }
 
+.fab.playing {
+    background: var(--accent);
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
+    animation: pulseGlow 2s infinite ease-in-out;
+}
+
+
+
 .app-container {
     width: 100%; max-width: 430px; height: 100%; position: relative; overflow: hidden;
     display: flex; flex-direction: column;
@@ -83,7 +73,7 @@ body {
 #bg-layer-2 { opacity: 0; }
 
 @keyframes bgBreathe {
-    0%, 100% { transform: scale(1.0) rotate(0deg); }
+    0%, 100!% { transform: scale(1.0) rotate(0deg); }
     50% { transform: scale(1.1) rotate(5deg); }
 }
 
@@ -109,13 +99,15 @@ body {
 .tab:active { transform: scale(0.95); }
 
 .content { position: relative; z-index: 10; flex: 1; padding: 0 20px 140px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.station-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
-border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; }
+.station-item { 
+    display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
+    border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; 
+}
 
 .station-thumb { 
     width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; 
     object-fit: cover; background: #111; 
-    transition: opacity 0.5s ease;
+    transition: opacity 0.8s ease, transform 0.5s ease;
 }
 
 .station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
@@ -123,8 +115,21 @@ border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), tran
     font-size: 11px; color: #b3b3b3; text-transform: uppercase;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;  
     overflow: hidden; line-height: 1.4; max-height: 2.8em;
+    transition: color 0.5s ease;
 }
-.station-desc.playing-now { color: #b3b3b3; font-weight: 400; text-transform: none; }
+
+.owned-yt-btn {
+    width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.owned-yt-btn:active { transform: scale(0.85); }
+.owned-yt-btn img {
+    width: 30px; height: 30px;
+    object-fit: contain; opacity: 0.80; 
+}
 
 #player-view { display: none; position: relative; z-index: 10; height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0 100px 0; }
 
@@ -133,7 +138,6 @@ border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), tran
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); object-fit: cover; 
     background: #111; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
-    will-change: opacity, transform;
 }
 .art-hidden { opacity: 0; transform: scale(0.95); }
 .art-visible { opacity: 1; transform: scale(1); }
@@ -142,29 +146,35 @@ border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), tran
 .track-slider-wrapper { display: flex; width: 300%; transform: translateX(-33.333%); will-change: transform; }
 .track-info-slide { width: 33.333%; text-align: center; padding: 0 45px; flex-shrink: 0; }
 .track-info-slide h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track-info-slide p { 
-    color: #b3b3b3; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;  
-    overflow: hidden; line-height: 1.5; min-height: 3em;
-}
+.track-info-slide p { color: #b3b3b3; font-size: 13px; text-transform: uppercase; line-height: 1.5; min-height: 3em; }
 
 .main-controls { display: flex; align-items: center; gap: 35px; margin-bottom: 20px; }
 .btn-round { 
     background: var(--glass); width: 58px; height: 58px; border-radius: 50%; 
     display: flex; align-items: center; justify-content: center; cursor: pointer; 
     backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); color: white;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s ease;
 }
-.btn-round:active { transform: scale(0.8); background: rgba(255, 255, 255, 0.15); }
 
-.btn-prev-anim i { animation: slideLeft 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
-.btn-next-anim i { animation: slideRight 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.btn-play { background: #fff; color: #000; width: 75px; height: 75px; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.btn-play.playing { 
+    background: var(--accent); 
+    color: #fff; 
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
+    animation: pulseGlow 3s infinite ease-in-out;
+}
 
-@keyframes slideLeft { 0% { transform: translateX(0); opacity: 1; } 40% { transform: translateX(-10px); opacity: 0.6; } 100% { transform: translateX(0); opacity: 1; } }
-@keyframes slideRight { 0% { transform: translateX(0); opacity: 1; } 40% { transform: translateX(10px); opacity: 0.6; } 100% { transform: translateX(0); opacity: 1; } }
+@keyframes pulseGlow {
+    0%, 100% { 
+        box-shadow: 0 0 15px rgba(255, 94, 58, 0.3); 
+        transform: scale(1.05); 
+    }
+    50% { 
+        box-shadow: 0 0 50px rgba(255, 94, 58, 0.7); 
+        transform: scale(1.10); /* O ușoară mărire suplimentară la mijlocul pulsului */
+    }
+}
 
-.btn-play { background: #fff; color: #000; width: 75px; height: 75px; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-.btn-play.playing { background: var(--accent); color: #fff; transform: scale(1.1); box-shadow: 0 0 30px rgba(255, 94, 58, 0.4); }
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -182,57 +192,79 @@ border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), tran
 .nav-bar.on-radio::before { transform: translateX(100%); }
 .nav-bar.on-player::before { transform: translateX(0%); }
 
-.nav-link { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; width: 50%; color: #777; cursor: pointer; font-size: 11px; transition: color 0.4s; }
+.nav-link { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; width: 50%; color: #777; cursor: pointer; font-size: 11px; }
 .nav-link.active { color: #fff; }
 .nav-link.active i { color: var(--accent); }
 
-.fab { position: absolute; bottom: 115px; right: 26px; background: var(--accent); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(255,94,58,0.4); z-index: 15; transition: transform 0.2s; }
-.fab:active { transform: scale(0.9); }
-</style>
+/* Stilul de bază pentru FAB (stare de pauză) */
+.fab { 
+    position: absolute; 
+    bottom: 115px; 
+    right: 26px; 
+    background: #fff; /* Fundal alb la pauză, ca în player */
+    color: #000;      /* Iconiță neagră */
+    width: 56px; 
+    height: 56px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3); 
+    z-index: 15; 
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
+/* Starea de Play pentru FAB */
+.fab.playing {
+    background: var(--accent); /* Culoarea portocalie */
+    color: #fff;               /* Iconiță albă */
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
+    animation: pulseGlow 3s infinite ease-in-out;
+}
+
+
+</style>
 </head>
 <body oncontextmenu="return false;">
 <div class="app-container">
     <div class="bg-blur" id="bg-layer-1"></div>
     <div class="bg-blur" id="bg-layer-2"></div>
 
-```
-<div id="list-view" style="height:100%; display:flex; flex-direction:column;">
-    <div class="header-tabs">
-        <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
-        <div class="tab active" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
-        <div class="tab" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
-        <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
+    <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
+        <div class="header-tabs">
+            <div class="tab active" id="tab-all" onclick="renderList('all', this)">All</div>
+            <div class="tab" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
+            <div class="tab" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
+            <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
+        </div>
+        <div class="content" id="stations-list"></div>
+        <div class="fab" id="fab-play-pause" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
     </div>
-    <div class="content" id="stations-list"></div>
-    <div class="fab" onclick="alert('Funcție indisponibilă')"><i data-lucide="plus"></i></div>
-</div>
 
-<div id="player-view">
-    <div class="art-container" id="swipe-zone-art">
-        <img src="" class="main-art art-visible" id="player-img-1" onerror="this.src=FALLBACK_IMG">
-        <img src="" class="main-art art-hidden" id="player-img-2" onerror="this.src=FALLBACK_IMG">
-    </div>
-    <div class="track-viewport" id="swipe-zone-text">
-        <div class="track-slider-wrapper" id="info-wrapper">
-            <div class="track-info-slide" id="slide-prev"><h2>Post Anterior</h2><p>Gen</p></div>
-            <div class="track-info-slide" id="slide-current"><h2>Alege un post</h2><p>Radio Player</p></div>
-            <div class="track-info-slide" id="slide-next"><h2>Post Următor</h2><p>Gen</p></div>
+    <div id="player-view">
+        <div class="art-container" id="swipe-zone-art">
+            <img src="" class="main-art art-visible" id="player-img-1" onerror="this.src=FALLBACK_IMG">
+            <img src="" class="main-art art-hidden" id="player-img-2" onerror="this.src=FALLBACK_IMG">
+        </div>
+        <div class="track-viewport" id="swipe-zone-text">
+            <div class="track-slider-wrapper" id="info-wrapper">
+                <div class="track-info-slide" id="slide-prev"><h2>Post Anterior</h2><p>Gen</p></div>
+                <div class="track-info-slide" id="slide-current"><h2>Alege un post</h2><p>Radio Player</p></div>
+                <div class="track-info-slide" id="slide-next"><h2>Post Următor</h2><p>Gen</p></div>
+            </div>
+        </div>
+        <div class="main-controls">
+            <div class="btn-round" id="btn-prev" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
+            <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
+            <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
         </div>
     </div>
-    <div class="main-controls">
-        <div class="btn-round" id="btn-prev" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
-        <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
-        <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
+
+    <div class="nav-bar on-radio" id="main-nav">
+        <div class="nav-link" id="nav-player" onclick="switchTab('player')"><i data-lucide="play-circle"></i><span>Player</span></div>
+        <div class="nav-link active" id="nav-list" onclick="switchTab('list')"><i data-lucide="radio"></i><span>Radio</span></div>
     </div>
-</div>
-
-<div class="nav-bar on-radio" id="main-nav">
-    <div class="nav-link" id="nav-player" onclick="switchTab('player')"><i data-lucide="play-circle"></i><span>Player</span></div>
-    <div class="nav-link active" id="nav-list" onclick="switchTab('list')"><i data-lucide="radio"></i><span>Radio</span></div>
-</div>
-```
-
 </div>
 
 <audio id="audio-engine" preload="auto" crossorigin="anonymous"></audio>
@@ -254,40 +286,165 @@ const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.1398
 const stations = [
     { name: "Heart 10s", stream: "https://media-ice.musicradio.com/Heart10sMP3", img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", desc: "POP, HITS, CHART", isFav: true, isAll: true },
     { name: "Kiss 10s", stream: "https://dc.digi.live.kissfm.ro/kiss.hits.from.the.10s/listen.m3u", img: "https://api.kissfm.ro/resized/streams/homepage/2025/01/10/cover-kiss-hits-from-the-10s_6210a8bb4e6b58d8b6d2c0342721cdb9.png", desc: "HITS FROM THE 10S", isFav: true, isAll: true },
-    { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS", isFav: true, isAll: true },
-    { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO", isFav: true, isAll: true },
-    { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE", isFav: true, isAll: true },
-    { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://yt3.googleusercontent.com/ytc/AIdro_kzkPgiLvOOACJ8JsiVWcgjbDaDftezak5j9Pv9KAp2cg=s900-c-k-c0x00ffffff-no-rj", desc: "DJ MIX, CLUB, DANCE", isFav: true, isAll: true },
+    { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS", isAll: true },
+    { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO", isAll: true },
+    { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE", isAll: true },
+    { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://yt3.googleusercontent.com/ytc/AIdro_kzkPgiLvOOACJ8JsiVWcgjbDaDftezak5j9Pv9KAp2cg=s900-c-k-c0x00ffffff-no-rj", desc: "DJ MIX, CLUB, DANCE", isAll: true },
     { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0e/fe/53/0efe532a-3cee-6c89-1d8d-c9f18284c0f2/mza_5165669991707061934.jpg/1200x1200bf-60.jpg", desc: "RECORD RUSSIAN MIX", isRussian: true, isAll: true },
     { name: "Маруся ФМ", stream: "https://radio-holding.ru:9433/marusya_default", img: "https://cover.marus.fm/cover/default.jpg", desc: "RUSSIAN POP MIX", isRussian: true, isAll: true },
     { name: "Европа Плюс", stream: "http://ep256.hostingradio.ru:8052/europaplus256.mp3", img: "https://static2.mytuner.mobi/media/tvos_radios/Fs3ahQV6xT.png", desc: "EUROPE MIX", isRussian: true, isAll: true },
     { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS", isRussian: true, isAll: true },
     { name: "DFM DANCE", stream: "https://dfm-dancegold10.hostingradio.ru/dancegold1096.aacp", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIoi_I2LWM0BpqHgWDPIjwxIF_E3POxwYL4YCBgQrepVIodIXXbv2zvAh4&s=10", desc: "DANCE GOLD, 90S", isRussian: true, isAll: true },
-    { name: "Emisiuni Vechi", stream: "http://155.133.23.121:8000/emisiunivechi", img: "https://yt3.googleusercontent.com/ytc/AIdro_mH-dA0beci-h-44yevlAUUDaajRWTiBcdverBGK7XXBw=s900-c-k-c0x00ffffff-no-rj", desc: "KISS FM | RADIO 21 | RADIO ZU", isMine: true },
-    { name: "Muzică Veche", stream: "http://155.133.23.121:8000/muzicaveche", img: "https://i.scdn.co/image/ab67616d0000b27316eb598cccbced4c4ac6bbbf", desc: "Childhood", isMine: true },
-    { name: "Pop Actual", stream: "http://155.133.23.121:8000/popactual", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRrd73RzhRJNu8IQ94U9TPy4O_hB2qVefaiynqfIk4TfXZ2xdAsvI7ynw&s=10", desc: "POP 20s", isMine: true },
-    { name: "Russian", stream: "http://155.133.23.121:8000/russian", img: "https://play-lh.googleusercontent.com/ImX8wknuPUzGOnAWHRgPJZtd2ehV0Uq37lTTTWov2B9yW6isYJoDn7poSCpyU-J-Uw", desc: "RUS | POP", isMine: true },
-    { name: "Manele", stream: "http://155.133.23.121:8000/manele", img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da842dd25b4dde6d46673b953a6e", desc: "Gypsy Team", isMine: true },
-    { name: "Amor", stream: "http://155.133.23.121:8000/hope", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "LOVEFOOL", isMine: true }
+    
+    // OWNED
+    { name: "Emisiuni 10s", stream: "https://sergiumusic.duckdns.org/emisiunivechi", img: "https://yt3.googleusercontent.com/ytc/AIdro_mH-dA0beci-h-44yevlAUUDaajRWTiBcdverBGK7XXBw=s900-c-k-c0x00ffffff-no-rj", desc: "KISS FM • RADIO 21 • RADIO ZU", isMine: true, isFav: true, isAll: true},
+    { name: "Muzică 10s", stream: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://i.scdn.co/image/ab67616d0000b27316eb598cccbced4c4ac6bbbf", desc: "Childhood", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLmDGw5869lgoRafQq8o6mSt-Z2UWZfMZz&si=wU1Jx3YJLAjZx-8J" },
+    { name: "Pop Actual", stream: "https://sergiumusic.duckdns.org/popactual", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRrd73RzhRJNu8IQ94U9TPy4O_hB2qVefaiynqfIk4TfXZ2xdAsvI7ynw&s=10", desc: "POP 20s", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12h2VlBi5lPddOig7Ki-dE2S&si=4StSQYlR4uazgPKO" },
+    { name: "Russian", stream: "https://sergiumusic.duckdns.org/russian", img: "https://play-lh.googleusercontent.com/ImX8wknuPUzGOnAWHRgPJZtd2ehV0Uq37lTTTWov2B9yW6isYJoDn7poSCpyU-J-Uw", desc: "RUS • POP", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12hUgv96dGWDN5_0zqyfwh1t&si=Ezw2KRYTNtJAAKnW" },
+    { name: "Manele", stream: "https://sergiumusic.duckdns.org/manele", img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da842dd25b4dde6d46673b953a6e", desc: "Gypsy Team", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXtIaoNo0wKIH9q_BFCHw4S_&si=XPeFO_NctOno3Vbu" },
+    { name: "Hope", stream: "https://sergiumusic.duckdns.org/hope", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "LOVEFOOL POP", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXuwf5SEEH9vhwwSci67SNnU&si=NclZd61NGrsZ0UCm" }
 ];
 
 stations.forEach(s => { s.originalDesc = s.desc; s.originalImg = s.img; s.currentTrack = ""; });
 
 function init() {
-    renderList('all', document.getElementById('tab-all')); 
-    lucide.createIcons();
+    renderList('fav', document.getElementById('tab-fav')); 
     updateSliderText();
     loadStationInfo(0, false);
     setupSwipe();
     scanAllStations();
+    
+    // Event listeners pentru audio
     audio.addEventListener('waiting', () => updateUI('loading'));
     audio.addEventListener('playing', () => updateUI(true));
     audio.addEventListener('pause', () => updateUI(false));
+
+    // Verificare link direct (Deep Link) la start
+    handleDeepLink();
 }
 
-function scanAllStations() {
-    stations.forEach(s => { if (!s.stream.includes('.m3u8')) { fetchSilentMetadata(s); } });
+/**
+ * Logica de Deep Linking
+ * Verifică URL-ul și pornește automat postul cerut
+ */
+function handleDeepLink() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let path = urlParams.get('p'); // Verificăm dacă venim din 404.html
+
+    if (path) {
+        // Curățăm calea (scoatem slash-urile)
+        path = path.replace(/^\/|\/$/g, '').toLowerCase().trim();
+        // Curățăm URL-ul din browser ca să arate frumos (fără ?p=/hope)
+        window.history.replaceState(null, null, '/' + path);
+    } else {
+        // Dacă nu avem parametrul 'p', încercăm citirea normală din URL
+        path = window.location.pathname.split('/').pop().toLowerCase().trim();
+    }
+
+    if (!path || path === "index.html" || path === "sergiu-fm") return; // "sergiu-fm" e numele repo-ului uneori
+
+    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const foundIdx = stations.findIndex(s => normalize(s.name) === normalize(path));
+
+    if (foundIdx !== -1) {
+        renderList('all', document.getElementById('tab-all'));
+        currentIdx = currentFilteredList.findIndex(s => s.name === stations[foundIdx].name);
+        if (currentIdx !== -1) {
+            playStation();
+        }
+    }
 }
+
+
+function renderList(mode, el) {
+    const list = document.getElementById('stations-list');
+    const fab = document.getElementById('fab-play-pause');
+    list.innerHTML = "";
+    
+    if(el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    }
+    
+    if (mode === 'mine') { fab.style.display = 'none'; } 
+    else { fab.style.display = 'flex'; }
+
+    currentFilteredList = stations.filter(s => {
+        if (mode === 'all') return s.isAll === true; 
+        if (mode === 'fav') return s.isFav;
+        if (mode === 'russian') return s.isRussian;
+        if (mode === 'mine') return s.isMine;
+        return false;
+    });
+
+    currentFilteredList.forEach((s) => {
+        const item = document.createElement('div');
+        item.className = 'station-item';
+        item.setAttribute('data-name', s.name); 
+        
+        let ownedControl = '';
+        if (mode === 'mine' && s.yt) {
+            ownedControl = `<div class="owned-yt-btn" onclick="event.stopPropagation(); window.open('${s.yt}', '_blank');"><img src="https://cdn-icons-png.flaticon.com/512/10308/10308828.png"></div>`;
+        }
+        
+        item.innerHTML = `<img src="${s.img || FALLBACK_IMG}" class="station-thumb"><div style="flex:1"><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>${ownedControl}`;
+        
+        item.onclick = () => { 
+            currentIdx = currentFilteredList.indexOf(s); 
+            playStation(); 
+        };
+        list.appendChild(item);
+    });
+    lucide.createIcons();
+}
+
+function switchTab(t) {
+    const nav = document.getElementById('main-nav');
+    const fab = document.getElementById('fab-play-pause');
+    
+    if(t==='list'){ 
+        document.getElementById('list-view').style.display='flex'; 
+        document.getElementById('player-view').style.display='none';
+        document.getElementById('nav-list').classList.add('active'); 
+        document.getElementById('nav-player').classList.remove('active'); 
+        nav.className = 'nav-bar on-radio';
+        const isMineActive = document.getElementById('tab-mine').classList.contains('active');
+        fab.style.display = isMineActive ? 'none' : 'flex';
+    } else { 
+        document.getElementById('list-view').style.display='none'; 
+        document.getElementById('player-view').style.display='flex';
+        document.getElementById('nav-list').classList.remove('active'); 
+        document.getElementById('nav-player').classList.add('active'); 
+        nav.className = 'nav-bar on-player';
+        fab.style.display = 'none';
+    }
+}
+
+function updateUI(state){ 
+    const b = document.getElementById('play-trigger'); 
+    const f = document.getElementById('fab-play-pause'); 
+    if(!b && !f) return;
+    
+    let iconPlay = '<i data-lucide="play" fill="currentColor"></i>';
+    let iconPause = '<i data-lucide="pause" fill="currentColor"></i>';
+    let iconLoad = '<i data-lucide="loader-2" class="spin"></i>';
+
+    if(state === 'loading') { 
+        if(b) { b.innerHTML = iconLoad; b.classList.remove('playing'); }
+        if(f) { f.innerHTML = iconLoad; f.classList.remove('playing'); }
+    }
+    else if(state === true){ 
+        if(b) { b.innerHTML = iconPause; b.classList.add('playing'); }
+        if(f) { f.innerHTML = iconPause; f.classList.add('playing'); }
+    }
+    else { 
+        if(b) { b.innerHTML = iconPlay; b.classList.remove('playing'); }
+        if(f) { f.innerHTML = iconPlay; f.classList.remove('playing'); }
+    }
+    lucide.createIcons();
+}
+
+function scanAllStations() { stations.forEach(s => { if (!s.stream.includes('.m3u8')) fetchSilentMetadata(s); }); }
 
 async function fetchSilentMetadata(station) {
     try {
@@ -300,22 +457,15 @@ async function fetchSilentMetadata(station) {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            let temp = new Uint8Array(buffer.length + value.length);
-            temp.set(buffer); temp.set(value, buffer.length);
-            buffer = temp;
+            let temp = new Uint8Array(buffer.length + value.length); temp.set(buffer); temp.set(value, buffer.length); buffer = temp;
             while (buffer.length >= metaInt + 1) {
                 let metaLength = buffer[metaInt] * 16;
                 if (buffer.length < metaInt + 1 + metaLength) break;
-                let metadata = buffer.slice(metaInt + 1, metaInt + 1 + metaLength);
-                let metaString = decoder.decode(metadata);
+                let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
                 let match = metaString.match(/StreamTitle='([^']*)'/);
                 if (match && match[1]) {
-                    let title = match[1].replace(/;/g, "").trim();
-                    if(station.currentTrack !== title) {
-                        station.desc = title;
-                        station.currentTrack = title;
-                        updateUIMetadata(station);
-                    }
+                    station.desc = match[1].replace(/;/g, "").trim();
+                    updateUIMetadata(station);
                     reader.cancel(); return;
                 }
                 buffer = buffer.slice(metaInt + 1 + metaLength);
@@ -325,29 +475,16 @@ async function fetchSilentMetadata(station) {
 }
 
 function updateArtUI(newImg) {
-    const art1 = document.getElementById('player-img-1');
-    const art2 = document.getElementById('player-img-2');
-    const bg1 = document.getElementById('bg-layer-1');
-    const bg2 = document.getElementById('bg-layer-2');
-    const nextArt = activeArtLayer === 1 ? art2 : art1;
-    const currentArt = activeArtLayer === 1 ? art1 : art2;
-    const nextBG = activeBGLayer === 1 ? bg2 : bg1;
-    const currentBG = activeBGLayer === 1 ? bg1 : bg2;
-
-    nextArt.src = newImg;
-    nextBG.style.backgroundImage = `url(${newImg})`;
-    nextArt.classList.replace('art-hidden', 'art-visible');
-    currentArt.classList.replace('art-visible', 'art-hidden');
-    nextBG.style.opacity = '1';
-    currentBG.style.opacity = '0';
-
-    activeArtLayer = activeArtLayer === 1 ? 2 : 1;
-    activeBGLayer = activeBGLayer === 1 ? 2 : 1;
-
-    const currentStation = currentFilteredList[currentIdx];
-    if (currentStation) {
-        updateMediaSession(currentStation);
-    }
+    const art1 = document.getElementById('player-img-1'); const art2 = document.getElementById('player-img-2');
+    const bg1 = document.getElementById('bg-layer-1'); const bg2 = document.getElementById('bg-layer-2');
+    const nextArt = activeArtLayer === 1 ? art2 : art1; const currentArt = activeArtLayer === 1 ? art1 : art2;
+    const nextBG = activeBGLayer === 1 ? bg2 : bg1; const currentBG = activeBGLayer === 1 ? bg1 : bg2;
+    
+    nextArt.src = newImg; nextBG.style.backgroundImage = `url(${newImg})`;
+    nextArt.classList.replace('art-hidden', 'art-visible'); currentArt.classList.replace('art-visible', 'art-hidden');
+    nextBG.style.opacity = '1'; currentBG.style.opacity = '0';
+    activeArtLayer = activeArtLayer === 1 ? 2 : 1; activeBGLayer = activeBGLayer === 1 ? 2 : 1;
+    updateMediaSession(currentFilteredList[currentIdx]);
 }
 
 async function fetchAlbumArt(title, stationRef) {
@@ -357,17 +494,15 @@ async function fetchAlbumArt(title, stationRef) {
         const data = await res.json();
         if (data.results && data.results.length > 0) {
             const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
-            if(stationRef.img === newImg) return;
             stationRef.img = newImg;
-            if (currentFilteredList[currentIdx] === stationRef) { 
-                updateArtUI(newImg); 
-            }
+            if (currentFilteredList[currentIdx] === stationRef) updateArtUI(newImg);
             const listItems = document.querySelectorAll('.station-item');
             listItems.forEach(item => {
-                if (item.querySelector('.station-name').innerText === stationRef.name) {
+                if(item.getAttribute('data-name') === stationRef.name) {
                     const thumb = item.querySelector('.station-thumb');
-                    thumb.style.opacity = '0';
-                    setTimeout(() => { thumb.src = newImg; thumb.style.opacity = '1'; }, 250);
+                    const desc = item.querySelector('.station-desc');
+                    if(thumb) thumb.src = newImg;
+                    if(desc) desc.innerText = stationRef.desc;
                 }
             });
         }
@@ -378,16 +513,93 @@ function updateUIMetadata(station) {
     fetchAlbumArt(station.desc, station);
     if (currentFilteredList[currentIdx] === station) {
         const slide = document.getElementById('slide-current');
-        if (slide) slide.querySelector('p').innerText = station.desc;
+        if(slide) slide.querySelector('p').innerText = station.desc;
+        updateMediaSession(station);
     }
-    const listItems = document.querySelectorAll('.station-item');
-    listItems.forEach(item => {
-        if (item.querySelector('.station-name').innerText === station.name) {
-            const descEl = item.querySelector('.station-desc');
-            descEl.innerText = station.desc;
-            descEl.classList.add('playing-now');
+}
+
+async function fetchMetadata(streamUrl, stationRef) {
+    const requestId = ++currentMetadataRequestId;
+    try {
+        const response = await fetch(streamUrl, { headers: { "Icy-MetaData": "1" } });
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let metaInt = parseInt(response.headers.get("icy-metaint"));
+        if (!metaInt) return;
+        let buffer = new Uint8Array();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done || requestId !== currentMetadataRequestId) break;
+            let temp = new Uint8Array(buffer.length + value.length); temp.set(buffer); temp.set(value, buffer.length); buffer = temp;
+            while (buffer.length >= metaInt + 1) {
+                let metaLength = buffer[metaInt] * 16;
+                if (buffer.length < metaInt + 1 + metaLength) break;
+                let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
+                let match = metaString.match(/StreamTitle='([^']*)'/);
+                if (match && match[1]) {
+                    let nt = match[1].replace(/;/g, "").trim();
+                    if (stationRef.currentTrack !== nt) { stationRef.desc = nt; stationRef.currentTrack = nt; updateUIMetadata(stationRef); }
+                }
+                buffer = buffer.slice(metaInt + 1 + metaLength);
+            }
         }
+    } catch (err) {}
+}
+
+function updateSliderText() {
+    if (currentFilteredList.length === 0) return;
+    const pIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
+    const nIdx = (currentIdx + 1) % currentFilteredList.length;
+    updateSlide('slide-prev', currentFilteredList[pIdx]);
+    updateSlide('slide-current', currentFilteredList[currentIdx]);
+    updateSlide('slide-next', currentFilteredList[nIdx]);
+}
+
+function updateSlide(id, data) { 
+    const el = document.getElementById(id); 
+    if(!el) return;
+    el.querySelector('h2').innerText = data.name; 
+    el.querySelector('p').innerText = data.desc; 
+}
+
+function loadStationInfo(idx, sp = true) {
+    if (currentFilteredList.length === 0) return;
+    const s = currentFilteredList[idx];
+    updateArtUI(s.img || FALLBACK_IMG);
+    if (metadataInterval) clearInterval(metadataInterval);
+    currentMetadataRequestId++; 
+    audio.src = s.stream;
+    setTimeout(() => { fetchMetadata(s.stream, s); metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 15000); }, 1000);
+    if(sp) { updateUI('loading'); audio.play().catch(()=>{}); }
+    updateMediaSession(s);
+}
+
+function playStation() { updateSliderText(); loadStationInfo(currentIdx, true); switchTab('player'); }
+function next() { currentIdx = (currentIdx + 1) % currentFilteredList.length; animateTransition('next'); }
+function prev() { currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length; animateTransition('prev'); }
+
+function animateTransition(dir) {
+    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+    wrapper.style.transform = dir==='next' ? 'translateX(-66.666%)' : 'translateX(0)';
+    setTimeout(()=>{ wrapper.style.transition='none'; loadStationInfo(currentIdx, true); updateSliderText(); wrapper.style.transform = 'translateX(-33.333%)'; }, 600);
+}
+
+function setupSwipe() {
+    const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
+    zones.forEach(z => {
+        z.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; wrapper.style.transition='none'; }, {passive: true});
+        z.addEventListener('touchmove', e=>{ if(!isDragging) return; const d = e.touches[0].clientX-startX; wrapper.style.transform = `translateX(calc(-33.333% + ${(d/window.innerWidth)*33}%))`; }, {passive: true});
+        z.addEventListener('touchend', e=>{ 
+            if(!isDragging) return; const d = e.changedTouches[0].clientX - startX;
+            if(d>60) prev(); else if(d<-60) next(); else { wrapper.style.transition = 'transform 0.4s ease'; wrapper.style.transform='translateX(-33.333%)'; }
+            isDragging=false;
+        });
     });
+}
+
+function togglePlay() { 
+    if (audio.paused) { updateUI('loading'); audio.play().catch(() => updateUI(false)); } 
+    else { audio.pause(); }
 }
 
 function updateMediaSession(station) {
@@ -405,195 +617,8 @@ function updateMediaSession(station) {
     }
 }
 
-async function fetchMetadata(streamUrl, stationRef) {
-    const requestId = ++currentMetadataRequestId;
-    try {
-        const response = await fetch(streamUrl, { headers: { "Icy-MetaData": "1" } });
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let metaInt = response.headers.get("icy-metaint");
-        if (!metaInt) return;
-        metaInt = parseInt(metaInt);
-        let buffer = new Uint8Array();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done || requestId !== currentMetadataRequestId) break;
-            let temp = new Uint8Array(buffer.length + value.length);
-            temp.set(buffer); temp.set(value, buffer.length);
-            buffer = temp;
-            while (buffer.length >= metaInt + 1) {
-                let metaLength = buffer[metaInt] * 16;
-                if (buffer.length < metaInt + 1 + metaLength) break;
-                let metadata = buffer.slice(metaInt + 1, metaInt + 1 + metaLength);
-                let metaString = decoder.decode(metadata);
-                let match = metaString.match(/StreamTitle='([^']*)'/);
-                if (match && match[1]) {
-                    let newTitle = match[1].replace(/;/g, "").trim();
-                    if (stationRef.currentTrack !== newTitle) {
-                        stationRef.desc = newTitle;
-                        stationRef.currentTrack = newTitle;
-                        updateUIMetadata(stationRef);
-                    }
-                }
-                buffer = buffer.slice(metaInt + 1 + metaLength);
-            }
-        }
-    } catch (err) {}
-}
-
-function renderList(mode, el) {
-    const list = document.getElementById('stations-list');
-    list.innerHTML = "";
-    if(el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-    }
-    currentFilteredList = stations.filter(s => {
-        if (mode === 'all') return s.isAll === true; 
-        if (mode === 'fav') return s.isFav;
-        if (mode === 'russian') return s.isRussian;
-        if (mode === 'mine') return s.isMine;
-        return false;
-    });
-
-    currentFilteredList.forEach((s, i) => {
-        const item = document.createElement('div');
-        item.className = 'station-item';
-        item.innerHTML = `
-            <img src="${s.img || FALLBACK_IMG}" class="station-thumb" onerror="this.src=FALLBACK_IMG">
-            <div style="flex:1">
-                <div class="station-name">${s.name}</div>
-                <div class="station-desc ${s.desc !== s.originalDesc ? 'playing-now' : ''}">${s.desc}</div>
-            </div>`;
-        item.onclick = () => { 
-            if (s.isMine) { window.location.href = s.stream; } 
-            else { currentIdx = currentFilteredList.indexOf(s); playStation(); }
-        };
-        list.appendChild(item);
-    });
-}
-
-function updateSliderText() {
-    if (currentFilteredList.length === 0) return;
-    const prevIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
-    const nextIdx = (currentIdx + 1) % currentFilteredList.length;
-    updateSlide('slide-prev', currentFilteredList[prevIdx]);
-    updateSlide('slide-current', currentFilteredList[currentIdx]);
-    updateSlide('slide-next', currentFilteredList[nextIdx]);
-}
-
-function updateSlide(id, data) {
-    const el = document.getElementById(id);
-    el.querySelector('h2').innerText = data.name;
-    el.querySelector('p').innerText = data.desc;
-}
-
-function loadStationInfo(idx, shouldPlay = true) {
-    if (currentFilteredList.length === 0) return;
-    const s = currentFilteredList[idx];
-    updateArtUI(s.img || FALLBACK_IMG);
-    if (metadataInterval) clearInterval(metadataInterval);
-    currentMetadataRequestId++; 
-    audio.src = s.stream;
-    
-    setTimeout(() => {
-        fetchMetadata(s.stream, s);
-        if (metadataInterval) clearInterval(metadataInterval);
-        metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 15000);
-    }, 1000);
-    if(shouldPlay) { updateUI('loading'); audio.play().catch(()=>{}); }
-}
-
-function playStation() { updateSliderText(); loadStationInfo(currentIdx, true); switchTab('player'); }
-
-function next() { 
-    const btn = document.getElementById('btn-next');
-    btn.classList.add('btn-next-anim');
-    setTimeout(() => btn.classList.remove('btn-next-anim'), 500);
-    currentIdx = (currentIdx + 1) % currentFilteredList.length; 
-    animateTransition('next'); 
-}
-
-function prev() { 
-    const btn = document.getElementById('btn-prev');
-    btn.classList.add('btn-prev-anim');
-    setTimeout(() => btn.classList.remove('btn-prev-anim'), 500);
-    currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length; 
-    animateTransition('prev'); 
-}
-
-function animateTransition(dir) {
-    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
-    wrapper.style.transform = dir==='next' ? 'translateX(-66.666%)' : 'translateX(0)';
-    setTimeout(()=>{ 
-        wrapper.style.transition='none';
-        loadStationInfo(currentIdx, true);
-        updateSliderText();
-        wrapper.style.transform = 'translateX(-33.333%)';
-    }, 600);
-}
-
-function setupSwipe() {
-    const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
-    zones.forEach(z => {
-        z.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; wrapper.style.transition='none'; }, {passive: true});
-        z.addEventListener('touchmove', e=>{ if(!isDragging) return; const d = e.touches[0].clientX-startX; wrapper.style.transform = `translateX(calc(-33.333% + ${(d/window.innerWidth)*33}%))`; }, {passive: true});
-        z.addEventListener('touchend', e=>{ 
-            if(!isDragging) return;
-            const d = e.changedTouches[0].clientX - startX;
-            if(d>60) prev(); else if(d<-60) next(); else {
-                wrapper.style.transition = 'transform 0.4s ease';
-                wrapper.style.transform='translateX(-33.333%)';
-            }
-            isDragging=false;
-        });
-    });
-}
-
-function togglePlay() {
-    if(audio.paused){ updateUI('loading'); audio.play().catch(()=>{}); } 
-    else { audio.pause(); }
-}
-
-function switchTab(t) {
-    const nav = document.getElementById('main-nav');
-    if(t==='list'){ 
-        document.getElementById('list-view').style.display='flex'; 
-        document.getElementById('player-view').style.display='none';
-        document.getElementById('nav-list').classList.add('active'); 
-        document.getElementById('nav-player').classList.remove('active'); 
-        nav.className = 'nav-bar on-radio';
-    } else { 
-        document.getElementById('list-view').style.display='none'; 
-        document.getElementById('player-view').style.display='flex';
-        document.getElementById('nav-list').classList.remove('active'); 
-        document.getElementById('nav-player').classList.add('active'); 
-        nav.className = 'nav-bar on-player';
-    }
-}
-
-function updateUI(state){ 
-    const b = document.getElementById('play-trigger'); 
-    if(state === 'loading') { b.innerHTML='<i data-lucide="loader-2" class="spin"></i>'; b.classList.remove('playing'); }
-    else if(state === true){ b.innerHTML='<i data-lucide="pause" fill="currentColor"></i>'; b.classList.add('playing'); }
-    else{ b.innerHTML='<i data-lucide="play" fill="currentColor"></i>'; b.classList.remove('playing'); }
-    lucide.createIcons();
-}
-
-// ✅ FIX 3: Blocare scroll involuntar care declanșează bara de adrese
-document.addEventListener('touchmove', function (e) {
-    // Permite scroll DOAR în lista de stații
-    if (e.target.closest('.content')) {
-        return;
-    }
-    e.preventDefault();
-}, { passive: false });
-
-// Forțează poziția la 0,0 pentru a ascunde orice rest de bară la încărcare
-window.scrollTo(0, 0);
-
 init();
 </script>
-
 </body>
 </html>
+
