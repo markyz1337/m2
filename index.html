@@ -422,30 +422,28 @@ const stations = [
 stations.forEach(s => { s.originalDesc = s.desc; s.originalImg = s.img; s.currentTrack = ""; });
 
 function init() {
-    // 1. Verificăm dacă avem parametru în URL (ex: ?station=Manele)
-    const params = new URLSearchParams(window.location.search);
-    const stationNameFromUrl = params.get('station');
+    // 1. Citim query-ul (care a fost pus acolo de 404.html)
+    const urlQuery = window.location.search.substring(1);
     let autoStartStation = null;
 
-    if (stationNameFromUrl) {
-        autoStartStation = stations.find(s => 
-            s.name.toLowerCase() === stationNameFromUrl.toLowerCase()
-        );
+    if (urlQuery) {
+        const targetName = decodeURIComponent(urlQuery).toLowerCase();
+        autoStartStation = stations.find(s => s.name.toLowerCase() === targetName);
+
+        // CURĂȚĂM URL-ul: Facem link-ul să arate curat în browser (fără ?)
+        if (autoStartStation) {
+            const cleanPath = window.location.pathname.replace(/\/$/, "") + "/" + autoStartStation.name;
+            window.history.replaceState({}, "", cleanPath);
+        }
     }
 
-    // 2. Logică de pornire condiționată
+    // 2. Logică de pornire (rămâne la fel ca înainte)
     if (autoStartStation) {
-        // Dacă venim de pe un link direct
         renderList('all', document.getElementById('tab-all'));
         currentIdx = currentFilteredList.indexOf(autoStartStation);
-        
-        // Încărcăm stația, dar NU forțăm play direct (sp = true) 
-        // deoarece browserul oricum ar bloca sunetul la prima încărcare.
-        // Utilizatorul va vedea playerul deschis și va apăsa Play.
         loadStationInfo(currentIdx, true); 
         switchTab('player');
     } else {
-        // Pornire normală (fără link direct)
         const heart10s = stations.find(s => s.name === "Heart 10s");
         if (heart10s) {
             heart10s.isInitialBgSource = true; 
@@ -454,24 +452,11 @@ function init() {
         renderList('mine', document.getElementById('tab-mine'));
         loadStationInfo(0, false, true);
     }
-
-    // 3. Inițializare restul componentelor
-    updateSliderText();
-    setupSwipe();
-    setupFabSwipe();
-    scanAllStations();
-
-    // Event Listeners pentru Audio Engine
-    audio.addEventListener('waiting', () => updateUI('loading'));
-    audio.addEventListener('playing', () => updateUI(true));
-    audio.addEventListener('pause', () => updateUI(false));
     
-    // Eroare de rețea sau stream picat
-    audio.addEventListener('error', () => {
-        console.error("Eroare la încărcarea stream-ului.");
-        updateUI(false);
-    });
+    // Restul inițializărilor...
+    updateSliderText(); setupSwipe(); setupFabSwipe(); scanAllStations();
 }
+
 
 
 
