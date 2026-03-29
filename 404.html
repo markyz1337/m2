@@ -4,13 +4,12 @@
     <meta charset="utf-8">
     <title>Sergiu FM</title>
     <script type="text/javascript">
-      // Luăm calea care a generat eroarea 404 (ex: /hope)
-      var pathSegment = window.location.pathname;
-      // Redirecționăm către index.html și punem calea ca un parametru special
-      window.location.replace(
-        window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') +
-        '/?p=' + encodeURIComponent(pathSegment)
-      );
+      // Luăm ultima parte a link-ului (ex: "Hope")
+      var pathSegments = window.location.pathname.split('/');
+      var station = pathSegments[pathSegments.length - 1];
+      
+      // Redirecționăm către index.html și transmitem stația prin URL ascuns
+      window.location.replace(window.location.origin + '/m2/?' + station);
     </script>
   </head>
   <body>
