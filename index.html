@@ -29,6 +29,58 @@
     overscroll-behavior: none;
 }
 
+
+
+
+/* Stiluri pentru Egalizatorul din Listă */
+.playing-icon {
+    display: none;
+    align-items: flex-end;
+    gap: 2px;
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+}
+
+.station-item.is-playing .playing-icon {
+    display: flex; /* Se afișează doar când părintele are clasa .is-playing */
+}
+
+/* Egalizatorul optimizat */
+.playing-icon span {
+    display: inline-block;
+    width: 3px;
+    background: linear-gradient(to top, var(--accent), #ff9d85); 
+    border-radius: 2px;
+    animation: bounce 0.5s ease-in-out infinite alternate;
+    box-shadow: 0 0 3px var(--accent), 0 0 5px rgba(255, 94, 58, 0.4);
+}
+
+/* Titlul postului care rulează cu efect de Neon discret */
+.station-item.is-playing .station-name {
+    color: var(--accent);
+    /* Aplicăm același tip de glow subtil ca la egalizator */
+    text-shadow: 0 0 25px var(--accent), 0 0 6px rgba(255, 94, 58, 0.2);
+    transition: all 0.4s ease;
+}
+
+
+
+
+.playing-icon span:nth-child(2) { animation-duration: 0.7s; }
+.playing-icon span:nth-child(3) { animation-duration: 0.6s; }
+
+@keyframes bounce {
+    from { height: 5px; }
+    to { height: 18px; }
+}
+
+/* Stil pentru a evidenția rândul activ (opțional) */
+.station-item.is-playing .station-name {
+    color: var(--accent);
+}
+
+
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
 
@@ -37,18 +89,51 @@ body {
     color: white; 
     height: 100dvh; 
     width: 100vw;
-    overflow: hidden; 
+    overflow: hidden; /* Previne scroll-ul pe body */
     display: flex; 
     justify-content: center;
-    touch-action: pan-y; 
+    touch-action: pan-y; /* Permite doar gesturi verticale, util pentru acuratețe */
 }
 
-.fab.playing {
-    background: var(--accent);
-    transform: scale(1.1);
-    box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
-    animation: pulseGlow 2s infinite ease-in-out;
+
+/* Containerul butonului - poziționat peste copertă */
+.player-yt-link {
+    position: absolute;
+    right: 11px;
+    bottom: 11px;
+    z-index: 35;
+    display: flex;
+    background: rgba(0, 0, 0, 0.7); /* Fundal semitransparent ca să se vadă pe orice poză */
+    backdrop-filter: blur(5px);
+    border-radius: 18px;
+    padding: 4px;
+    transition: transform 0.3s ease, opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 0.8;
+    visibility: visible;
+    text-decoration: none;
 }
+
+/* LIMITAREA ICONIȚEI - Aceasta este partea care rezolvă problema "gigantului" */
+.player-yt-link img {
+    width: 36px;  /* Dimensiune mică, controlată */
+    height: 36px;
+    display: block;
+    object-fit: contain;
+}
+
+/* Efect de apăsare */
+.player-yt-link:active {
+    transform: scale(0.9);
+}
+
+/* Stilul pentru când butonul trebuie să fie ascuns */
+.yt-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
+    transform: scale(0.7);
+}
+
 
 
 
@@ -59,18 +144,18 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Modifică/Înlocuiește aceste părți în <style> */
 .bg-blur {
     position: absolute; 
     top: -10%; left: -10%; width: 120%; height: 120%;
-    background-size: cover; background-position: center;
+    background-size: cover; 
+    background-position: center;
     filter: blur(40px) brightness(0.4) saturate(1.2);
-    z-index: 0; will-change: opacity, transform;
-    animation: bgBreathe 30s infinite ease-in-out;
-    transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0; 
+    opacity: 0; /* Toate pornesc de la 0 */
+    transition: opacity 1.5s ease-in-out; /* Tranziție lungă */
+    will-change: opacity;
 }
-
-#bg-layer-1 { opacity: 1; }
-#bg-layer-2 { opacity: 0; }
 
 @keyframes bgBreathe {
     0%, 100!% { transform: scale(1.0) rotate(0deg); }
@@ -92,13 +177,30 @@ body {
     border: 1px solid rgba(255,255,255,0.1); 
     cursor: pointer; 
     white-space: nowrap;
-    font-weight: 500;
+    font-weight: 800;
     transition: background-color 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.2s ease;
 }
 .tab.active { background: var(--accent); border-color: transparent; font-weight: 900; }
 .tab:active { transform: scale(0.95); }
 
-.content { position: relative; z-index: 10; flex: 1; padding: 0 20px 140px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.content { 
+    position: relative; 
+    z-index: 10; 
+    flex: 1; 
+    padding: 0 20px 140px 20px; 
+    
+    /* Activează scroll-ul pe verticală */
+    overflow-y: auto; 
+    
+    /* === ADAUGĂ ACESTE LINII PENTRU EFECTUL ELASTIC === */
+    /* Permite "overscroll" (trecerea peste limită) cu efect de bounce */
+    overscroll-behavior-y: contain; 
+    
+    /* Asigură fluiditatea scroll-ului pe iOS */
+    -webkit-overflow-scrolling: touch; 
+}
+
 .station-item { 
     display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
     border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; 
@@ -196,13 +298,12 @@ body {
 .nav-link.active { color: #fff; }
 .nav-link.active i { color: var(--accent); }
 
-/* Stilul de bază pentru FAB (stare de pauză) */
 .fab { 
     position: absolute; 
     bottom: 115px; 
-    right: 26px; 
-    background: #fff; /* Fundal alb la pauză, ca în player */
-    color: #000;      /* Iconiță neagră */
+    right: 31px; 
+    background: #fff; 
+    color: #000;      
     width: 56px; 
     height: 56px; 
     border-radius: 50%; 
@@ -214,14 +315,14 @@ body {
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Starea de Play pentru FAB */
 .fab.playing {
-    background: var(--accent); /* Culoarea portocalie */
-    color: #fff;               /* Iconiță albă */
+    background: var(--accent); 
+    color: #fff;               
     transform: scale(1.1);
     box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
     animation: pulseGlow 3s infinite ease-in-out;
 }
+
 
 
 </style>
@@ -231,22 +332,31 @@ body {
     <div class="bg-blur" id="bg-layer-1"></div>
     <div class="bg-blur" id="bg-layer-2"></div>
 
-    <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
-        <div class="header-tabs">
-            <div class="tab active" id="tab-all" onclick="renderList('all', this)">All</div>
-            <div class="tab" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
-            <div class="tab" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
-            <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
-        </div>
-        <div class="content" id="stations-list"></div>
-        <div class="fab" id="fab-play-pause" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
-    </div>
+        <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
+<div class="header-tabs">
+    <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
+    <div class="tab" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
+    <div class="tab active" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
+    <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
+</div>
 
-    <div id="player-view">
+        <div class="content" id="stations-list"></div>
+        
+<div class="fab" id="fab-play-pause" onclick="togglePlay()">
+    <i data-lucide="play" fill="currentColor"></i>
+</div>
+
+
+    </div> <div id="player-view">
         <div class="art-container" id="swipe-zone-art">
             <img src="" class="main-art art-visible" id="player-img-1" onerror="this.src=FALLBACK_IMG">
             <img src="" class="main-art art-hidden" id="player-img-2" onerror="this.src=FALLBACK_IMG">
+            
+<a id="player-yt-btn" href="#" target="_blank" class="player-yt-link yt-hidden">
+    <img src="https://cdn-icons-png.flaticon.com/512/10610/10610674.png" alt="YouTube Link">
+</a>
         </div>
+
         <div class="track-viewport" id="swipe-zone-text">
             <div class="track-slider-wrapper" id="info-wrapper">
                 <div class="track-info-slide" id="slide-prev"><h2>Post Anterior</h2><p>Gen</p></div>
@@ -254,12 +364,14 @@ body {
                 <div class="track-info-slide" id="slide-next"><h2>Post Următor</h2><p>Gen</p></div>
             </div>
         </div>
+
         <div class="main-controls">
             <div class="btn-round" id="btn-prev" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
             <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
             <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
         </div>
     </div>
+
 
     <div class="nav-bar on-radio" id="main-nav">
         <div class="nav-link" id="nav-player" onclick="switchTab('player')"><i data-lucide="play-circle"></i><span>Player</span></div>
@@ -275,6 +387,7 @@ let currentFilteredList = [];
 let activeBGLayer = 1;
 let activeArtLayer = 1; 
 let startX = 0;
+let activeStationObject = null;
 let isDragging = false;
 let currentMetadataRequestId = 0;
 let metadataInterval = null;
@@ -291,84 +404,267 @@ const stations = [
     { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE", isAll: true },
     { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://yt3.googleusercontent.com/ytc/AIdro_kzkPgiLvOOACJ8JsiVWcgjbDaDftezak5j9Pv9KAp2cg=s900-c-k-c0x00ffffff-no-rj", desc: "DJ MIX, CLUB, DANCE", isAll: true },
     { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0e/fe/53/0efe532a-3cee-6c89-1d8d-c9f18284c0f2/mza_5165669991707061934.jpg/1200x1200bf-60.jpg", desc: "RECORD RUSSIAN MIX", isRussian: true, isAll: true },
-    { name: "Маруся ФМ", stream: "https://radio-holding.ru:9433/marusya_default", img: "https://cover.marus.fm/cover/default.jpg", desc: "RUSSIAN POP MIX", isRussian: true, isAll: true },
+    { name: "Маруся ФМ", stream: "https://listen.vdfm.ru:8000/marusya", img: "https://cover.marus.fm/cover/default.jpg", desc: "RUSSIAN POP MIX", isRussian: true, isAll: true },
     { name: "Европа Плюс", stream: "http://ep256.hostingradio.ru:8052/europaplus256.mp3", img: "https://static2.mytuner.mobi/media/tvos_radios/Fs3ahQV6xT.png", desc: "EUROPE MIX", isRussian: true, isAll: true },
     { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS", isRussian: true, isAll: true },
     { name: "DFM DANCE", stream: "https://dfm-dancegold10.hostingradio.ru/dancegold1096.aacp", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIoi_I2LWM0BpqHgWDPIjwxIF_E3POxwYL4YCBgQrepVIodIXXbv2zvAh4&s=10", desc: "DANCE GOLD, 90S", isRussian: true, isAll: true },
     
     // OWNED
-    { name: "Emisiuni 10s", stream: "https://sergiumusic.duckdns.org/emisiunivechi", img: "https://yt3.googleusercontent.com/ytc/AIdro_mH-dA0beci-h-44yevlAUUDaajRWTiBcdverBGK7XXBw=s900-c-k-c0x00ffffff-no-rj", desc: "KISS FM • RADIO 21 • RADIO ZU", isMine: true, isFav: true, isAll: true},
-    { name: "Muzică 10s", stream: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://i.scdn.co/image/ab67616d0000b27316eb598cccbced4c4ac6bbbf", desc: "Childhood", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLmDGw5869lgoRafQq8o6mSt-Z2UWZfMZz&si=wU1Jx3YJLAjZx-8J" },
-    { name: "Pop Actual", stream: "https://sergiumusic.duckdns.org/popactual", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRrd73RzhRJNu8IQ94U9TPy4O_hB2qVefaiynqfIk4TfXZ2xdAsvI7ynw&s=10", desc: "POP 20s", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12h2VlBi5lPddOig7Ki-dE2S&si=4StSQYlR4uazgPKO" },
-    { name: "Russian", stream: "https://sergiumusic.duckdns.org/russian", img: "https://play-lh.googleusercontent.com/ImX8wknuPUzGOnAWHRgPJZtd2ehV0Uq37lTTTWov2B9yW6isYJoDn7poSCpyU-J-Uw", desc: "RUS • POP", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12hUgv96dGWDN5_0zqyfwh1t&si=Ezw2KRYTNtJAAKnW" },
-    { name: "Manele", stream: "https://sergiumusic.duckdns.org/manele", img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da842dd25b4dde6d46673b953a6e", desc: "Gypsy Team", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXtIaoNo0wKIH9q_BFCHw4S_&si=XPeFO_NctOno3Vbu" },
-    { name: "Hope", stream: "https://sergiumusic.duckdns.org/hope", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "LOVEFOOL POP", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXuwf5SEEH9vhwwSci67SNnU&si=NclZd61NGrsZ0UCm" }
+    { name: "Muzică 10s", stream: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://mosaic.scdn.co/640/ab67616d00001e021badc66d1c9de6a98d376946ab67616d00001e022b605014f0cf0ca5e3c46b64ab67616d00001e02baa7a73c40a30e2c780c6841ab67616d00001e02ce26853f4b61f0924446f683", desc: "Sergiu | Childhood", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLmDGw5869lgoRafQq8o6mSt-Z2UWZfMZz&si=wU1Jx3YJLAjZx-8J" },
+    { name: "Emisiuni 10s", stream: "https://sergiumusic.duckdns.org/emisiunivechi", img: "https://play-lh.googleusercontent.com/r6ymNUMhRQN9-V6DS0ZZziAKAZrnJKGEw5mIK4KNFV8XPpD5JBEmlEn2ptSx0RDAEMs", desc: "SERGIU | KISS FM • RADIO 21 • RADIO ZU", isMine: true, isFav: true, isAll: true},
+    { name: "Pop Actual", stream: "https://sergiumusic.duckdns.org/popactual", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRrd73RzhRJNu8IQ94U9TPy4O_hB2qVefaiynqfIk4TfXZ2xdAsvI7ynw&s=10", desc: "Sergiu | POP 20s", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12h2VlBi5lPddOig7Ki-dE2S&si=4StSQYlR4uazgPKO" },
+    { name: "Russian", stream: "https://sergiumusic.duckdns.org/russian", img: "https://play-lh.googleusercontent.com/ImX8wknuPUzGOnAWHRgPJZtd2ehV0Uq37lTTTWov2B9yW6isYJoDn7poSCpyU-J-Uw", desc: "Sergiu | RUS • POP", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12hUgv96dGWDN5_0zqyfwh1t&si=Ezw2KRYTNtJAAKnW" },
+    { name: "Manele", stream: "https://sergiumusic.duckdns.org/manele", img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da842dd25b4dde6d46673b953a6e", desc: "Sergiu | Gypsy Team", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXtIaoNo0wKIH9q_BFCHw4S_&si=XPeFO_NctOno3Vbu" },
+    { name: "Hope", stream: "https://sergiumusic.duckdns.org/hope", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "Sergiu | Lovefool Pop", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXuwf5SEEH9vhwwSci67SNnU&si=NclZd61NGrsZ0UCm" },
+    { name: "Generated Music", stream: "https://sergiumusic.duckdns.org/aimusic", img: "https://i.pinimg.com/236x/fd/fc/82/fdfc82753e4f8cbdd49184e9dea43d06.jpg", desc: "Sergiu | AI POP", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12jv_iNgO8ApKgjIO-9NSg85&si=Qs6H1Iogrp47YRuX" }
 ];
 
 stations.forEach(s => { s.originalDesc = s.desc; s.originalImg = s.img; s.currentTrack = ""; });
 
 function init() {
-    renderList('fav', document.getElementById('tab-fav')); 
+    // 1. Verificăm dacă avem o stație în URL
+    const stationNameFromUrl = getStationFromURL();
+    let autoStartStation = null;
+
+    if (stationNameFromUrl) {
+        // Căutăm stația în lista mare (indiferent de tab-ul curent)
+        autoStartStation = stations.find(s => 
+            s.name.toLowerCase() === stationNameFromUrl.toLowerCase()
+        );
+    }
+
+    // 2. Logică de pornire
+    if (autoStartStation) {
+        // Dacă am găsit stația din link, o setăm ca activă
+        // Forțăm randarea listei 'all' pentru a asigura contextul
+        renderList('all', document.getElementById('tab-all'));
+        currentIdx = currentFilteredList.indexOf(autoStartStation);
+        
+        // Pornim direct Playerul
+        loadStationInfo(currentIdx, true); 
+        switchTab('player');
+    } else {
+        // Comportamentul tău original (Heart 10s pe fundal)
+        const heart10s = stations.find(s => s.name === "Heart 10s");
+        if (heart10s) {
+            heart10s.isInitialBgSource = true; 
+            fetchSilentMetadata(heart10s); 
+        }
+        renderList('mine', document.getElementById('tab-mine'));
+        loadStationInfo(0, false, true);
+    }
+
     updateSliderText();
-    loadStationInfo(0, false);
     setupSwipe();
+    setupFabSwipe();
     scanAllStations();
-    
-    // Event listeners pentru audio
+
+    // Event listeners...
     audio.addEventListener('waiting', () => updateUI('loading'));
     audio.addEventListener('playing', () => updateUI(true));
     audio.addEventListener('pause', () => updateUI(false));
-
-    // Verificare link direct (Deep Link) la start
-    handleDeepLink();
 }
 
-/**
- * Logica de Deep Linking
- * Verifică URL-ul și pornește automat postul cerut
- */
-function handleDeepLink() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let path = urlParams.get('p'); // Verificăm dacă venim din 404.html
 
-    if (path) {
-        // Curățăm calea (scoatem slash-urile)
-        path = path.replace(/^\/|\/$/g, '').toLowerCase().trim();
-        // Curățăm URL-ul din browser ca să arate frumos (fără ?p=/hope)
-        window.history.replaceState(null, null, '/' + path);
-    } else {
-        // Dacă nu avem parametrul 'p', încercăm citirea normală din URL
-        path = window.location.pathname.split('/').pop().toLowerCase().trim();
-    }
+function getStationFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('station'); // caută valoarea după "?station="
+}
 
-    if (!path || path === "index.html" || path === "sergiu-fm") return; // "sergiu-fm" e numele repo-ului uneori
 
-    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const foundIdx = stations.findIndex(s => normalize(s.name) === normalize(path));
+let fabStartX = 0;
+let fabStartY = 0;
+let fabIsDragging = false;
 
-    if (foundIdx !== -1) {
-        renderList('all', document.getElementById('tab-all'));
-        currentIdx = currentFilteredList.findIndex(s => s.name === stations[foundIdx].name);
-        if (currentIdx !== -1) {
-            playStation();
+
+function setupFabSwipe() {
+    const fab = document.getElementById('fab-play-pause');
+    
+    fab.addEventListener('touchstart', (e) => {
+        fabStartX = e.touches[0].clientX;
+        fabStartY = e.touches[0].clientY;
+        fabIsDragging = true;
+    }, { passive: true });
+
+    fab.addEventListener('touchend', (e) => {
+        if (!fabIsDragging) return;
+        
+        const diffX = e.changedTouches[0].clientX - fabStartX;
+        const diffY = e.changedTouches[0].clientY - fabStartY;
+        const threshold = 30;
+
+        if (currentFilteredList.length === 0) return;
+
+        // 🔽 JOS → NEXT
+        if (diffY > threshold && Math.abs(diffY) > Math.abs(diffX)) {
+            if (audio.paused && !audio.src) {
+                playStation(); 
+            } else {
+                next();
+            }
+            showFabFeedback('skip-forward');
         }
+
+        // 🔼 SUS → PREVIOUS
+        else if (diffY < -threshold && Math.abs(diffY) > Math.abs(diffX)) {
+            if (audio.paused && !audio.src) {
+                playStation();
+            } else {
+                prev();
+            }
+            showFabFeedback('skip-back');
+        }
+
+        // ⬅️ STÂNGA → NEXT
+        else if (diffX < -threshold) {
+            if (audio.paused && !audio.src) {
+                playStation();
+            } else {
+                next();
+            }
+            showFabFeedback('skip-forward');
+        }
+        
+        fabIsDragging = false;
+    });
+}
+
+
+
+function showFabFeedback(iconName) {
+    const fab = document.getElementById('fab-play-pause');
+    const iconEl = fab.querySelector('i');
+
+    if (iconEl) {
+        iconEl.setAttribute('data-lucide', iconName);
+        lucide.createIcons();
+        
+        setTimeout(() => {
+            // Revenim la iconița de Play/Pause în funcție de starea reală a sunetului
+            const stateIcon = audio.paused ? 'play' : 'pause';
+            iconEl.setAttribute('data-lucide', stateIcon);
+            lucide.createIcons();
+        }, 800);
+    }
+    if (navigator.vibrate) navigator.vibrate(30);
+}
+
+
+
+
+
+
+
+
+
+
+async function fetchAlbumArt(title, stationRef) {
+    if (!title || title.length < 3) return;
+
+    let fallbackTimeout = null;
+
+    // --- LOGICA TIMEOUT 2 SECUNDE PENTRU HEART 10S ---
+    if (stationRef.isInitialBgSource) {
+        fallbackTimeout = setTimeout(() => {
+            // Dacă au trecut 2 secunde și încă nu avem imagine de la iTunes
+            if (stationRef.img === stationRef.originalImg || !stationRef.img) {
+                console.log("iTunes prea lent, aplicăm logo-ul stației ca fundal.");
+                applyImageToUI(stationRef.originalImg, stationRef, true);
+            }
+        }, 2000); // 2000ms = 2 secunde
+    }
+
+    try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+            // Dacă iTunes a răspuns, curățăm timeout-ul să nu mai punem logo-ul vechi peste
+            if (fallbackTimeout) clearTimeout(fallbackTimeout);
+
+            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
+            applyImageToUI(newImg, stationRef, false);
+        }
+    } catch (e) {
+        // În caz de eroare (ex: offline), punem direct logo-ul
+        if (stationRef.isInitialBgSource) applyImageToUI(stationRef.originalImg, stationRef, true);
     }
 }
 
+// Funcție helper pentru a aplica imaginea peste tot unitar
+function applyImageToUI(imgUrl, stationRef, isFallback) {
+    const tempImg = new Image();
+    tempImg.src = imgUrl;
+    tempImg.onload = () => {
+        stationRef.img = imgUrl;
+
+        // 1. Fundalul pentru Heart 10s (Prima pornire)
+        if (stationRef.isInitialBgSource && audio.paused) {
+            const bg1 = document.getElementById('bg-layer-1');
+            bg1.style.backgroundImage = `url(${imgUrl})`;
+            bg1.style.opacity = '1';
+        }
+
+        // 2. Coperta din Player (Dacă e postul activ)
+        if (activeStationObject && activeStationObject.name === stationRef.name) {
+            updateArtUI(imgUrl);
+        }
+        
+        // 3. Miniaturile din listă
+        document.querySelectorAll('.station-item').forEach(item => {
+            if(item.getAttribute('data-name') === stationRef.name) {
+                const thumb = item.querySelector('.station-thumb');
+                if(thumb) thumb.src = imgUrl;
+            }
+        });
+    };
+}
+
+
+
+
+
+
+
+function updateMediaSession(station) {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: station.desc,
+            artist: station.name,
+            album: "Sergiu FM",
+            artwork: [{ src: station.img || FALLBACK_IMG, sizes: '512x512', type: 'image/png' }]
+        });
+        navigator.mediaSession.setActionHandler('play', () => audio.play());
+        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', () => prev());
+        navigator.mediaSession.setActionHandler('nexttrack', () => next());
+    }
+}
 
 function renderList(mode, el) {
     const list = document.getElementById('stations-list');
     const fab = document.getElementById('fab-play-pause');
+    
+    // 1. Resetăm scroll-ul la 0 (SUS) imediat ce schimbăm categoria
+    // Folosim elementul cu clasa .content deoarece acesta are overflow-y: auto
+    const scrollContainer = document.querySelector('.content');
+    if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+    }
+
+    // 2. Curățăm lista existentă
     list.innerHTML = "";
     
+    // 3. Gestionăm starea vizuală a tab-urilor
     if(el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
     }
     
-    if (mode === 'mine') { fab.style.display = 'none'; } 
-    else { fab.style.display = 'flex'; }
+    // Ne asigurăm că butonul plutitor (FAB) este vizibil în modul listă
+    fab.style.display = 'flex';
 
+    // 4. Filtrăm stațiile pe baza modului selectat
     currentFilteredList = stations.filter(s => {
         if (mode === 'all') return s.isAll === true; 
         if (mode === 'fav') return s.isFav;
@@ -377,63 +673,106 @@ function renderList(mode, el) {
         return false;
     });
 
+    // 5. Generăm elementele în DOM
     currentFilteredList.forEach((s) => {
         const item = document.createElement('div');
-        item.className = 'station-item';
+        
+        // Verificăm dacă stația curentă este cea care rulează acum pentru a activa egalizatorul
+        const isCurrent = (!audio.paused && activeStationObject && activeStationObject.name === s.name);
+        
+        item.className = `station-item ${isCurrent ? 'is-playing' : ''}`;
         item.setAttribute('data-name', s.name); 
         
-        let ownedControl = '';
-        if (mode === 'mine' && s.yt) {
-            ownedControl = `<div class="owned-yt-btn" onclick="event.stopPropagation(); window.open('${s.yt}', '_blank');"><img src="https://cdn-icons-png.flaticon.com/512/10308/10308828.png"></div>`;
-        }
+        item.innerHTML = `
+            <img src="${s.img || FALLBACK_IMG}" class="station-thumb">
+            <div style="flex:1">
+                <div class="station-name">${s.name}</div>
+                <div class="station-desc">${s.desc}</div>
+            </div>
+            <div class="playing-icon">
+                <span></span><span></span><span></span>
+            </div>
+        `;
         
-        item.innerHTML = `<img src="${s.img || FALLBACK_IMG}" class="station-thumb"><div style="flex:1"><div class="station-name">${s.name}</div><div class="station-desc">${s.desc}</div></div>${ownedControl}`;
-        
+        // La click, setăm indexul și pornim playerul
         item.onclick = () => { 
             currentIdx = currentFilteredList.indexOf(s); 
             playStation(); 
         };
         list.appendChild(item);
     });
+    
+    // 6. Reinițializăm iconițele Lucide și starea UI
     lucide.createIcons();
+    updateUI(!audio.paused);
 }
+
+
+
+
+
+
+
+
 
 function switchTab(t) {
     const nav = document.getElementById('main-nav');
     const fab = document.getElementById('fab-play-pause');
     
-    if(t==='list'){ 
-        document.getElementById('list-view').style.display='flex'; 
-        document.getElementById('player-view').style.display='none';
+    if(t === 'list'){ 
+        document.getElementById('list-view').style.display = 'flex'; 
+        document.getElementById('player-view').style.display = 'none';
         document.getElementById('nav-list').classList.add('active'); 
         document.getElementById('nav-player').classList.remove('active'); 
         nav.className = 'nav-bar on-radio';
-        const isMineActive = document.getElementById('tab-mine').classList.contains('active');
-        fab.style.display = isMineActive ? 'none' : 'flex';
+        
+        // Afișăm butonul mereu când suntem în modul listă
+        fab.style.display = 'flex';
+        
     } else { 
-        document.getElementById('list-view').style.display='none'; 
-        document.getElementById('player-view').style.display='flex';
+        document.getElementById('list-view').style.display = 'none'; 
+        document.getElementById('player-view').style.display = 'flex';
         document.getElementById('nav-list').classList.remove('active'); 
         document.getElementById('nav-player').classList.add('active'); 
         nav.className = 'nav-bar on-player';
+        
+        // Ascundem FAB doar când intrăm în Player-ul mare
         fab.style.display = 'none';
     }
 }
 
-function updateUI(state){ 
-    const b = document.getElementById('play-trigger'); 
-    const f = document.getElementById('fab-play-pause'); 
+
+
+
+
+function updateUI(state) { 
+    const b = document.getElementById('play-trigger');
+    const f = document.getElementById('fab-play-pause');
     if(!b && !f) return;
     
     let iconPlay = '<i data-lucide="play" fill="currentColor"></i>';
     let iconPause = '<i data-lucide="pause" fill="currentColor"></i>';
     let iconLoad = '<i data-lucide="loader-2" class="spin"></i>';
 
-    if(state === 'loading') { 
+    // 1. Curățăm starea vizuală: eliminăm clasa "is-playing" de pe toate rândurile din listă
+    const allItems = document.querySelectorAll('.station-item');
+    allItems.forEach(item => item.classList.remove('is-playing'));
+
+    // 2. Dacă radio-ul cântă sau se încarcă, activăm egalizatorul doar pe rândul corect
+    if ((state === true || state === 'loading') && typeof activeStationObject !== 'undefined' && activeStationObject) {
+        // Căutăm în DOM rândul care are atributul data-name egal cu numele stației active
+        const activeItem = document.querySelector(`.station-item[data-name="${activeStationObject.name}"]`);
+        if (activeItem) {
+            activeItem.classList.add('is-playing');
+        }
+    }
+
+    // 3. Actualizăm iconițele pentru Butonul din Player și pentru butonul plutitor (FAB)
+    if (state === 'loading') { 
         if(b) { b.innerHTML = iconLoad; b.classList.remove('playing'); }
         if(f) { f.innerHTML = iconLoad; f.classList.remove('playing'); }
     }
-    else if(state === true){ 
+    else if (state === true) { 
         if(b) { b.innerHTML = iconPause; b.classList.add('playing'); }
         if(f) { f.innerHTML = iconPause; f.classList.add('playing'); }
     }
@@ -441,38 +780,130 @@ function updateUI(state){
         if(b) { b.innerHTML = iconPlay; b.classList.remove('playing'); }
         if(f) { f.innerHTML = iconPlay; f.classList.remove('playing'); }
     }
+    
+    // 4. Re-randăm iconițele Lucide pentru a afișa noile SVG-uri
     lucide.createIcons();
 }
 
+
+
+
+
+
 function scanAllStations() { stations.forEach(s => { if (!s.stream.includes('.m3u8')) fetchSilentMetadata(s); }); }
 
+// 1. Modificăm fetchSilentMetadata să asigure afișarea fundalului
 async function fetchSilentMetadata(station) {
     try {
         const response = await fetch(station.stream, { headers: { "Icy-MetaData": "1" } });
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let metaInt = parseInt(response.headers.get("icy-metaint"));
-        if (!metaInt) return;
+        
+        // Dacă nu avem metadate, punem măcar logo-ul pe fundal la început
+        if (!metaInt && station.isInitialBgSource) {
+            applyImageToUI(station.originalImg, station, true);
+            return;
+        }
+
         let buffer = new Uint8Array();
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            let temp = new Uint8Array(buffer.length + value.length); temp.set(buffer); temp.set(value, buffer.length); buffer = temp;
+            let temp = new Uint8Array(buffer.length + value.length); 
+            temp.set(buffer); temp.set(value, buffer.length); buffer = temp;
+
             while (buffer.length >= metaInt + 1) {
                 let metaLength = buffer[metaInt] * 16;
                 if (buffer.length < metaInt + 1 + metaLength) break;
                 let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
                 let match = metaString.match(/StreamTitle='([^']*)'/);
+                
                 if (match && match[1]) {
                     station.desc = match[1].replace(/;/g, "").trim();
-                    updateUIMetadata(station);
-                    reader.cancel(); return;
+                    // Căutăm coperta pe iTunes
+                    fetchAlbumArt(station.desc, station);
+                    reader.cancel(); 
+                    return;
                 }
                 buffer = buffer.slice(metaInt + 1 + metaLength);
             }
         }
-    } catch(e) {}
+    } catch(e) {
+        // Dacă stream-ul e picat sau eroarea de rețea, punem logo-ul
+        if (station.isInitialBgSource) applyImageToUI(station.originalImg, station, true);
+    }
 }
+
+// 2. Funcția de căutare copertă cu cronometrul de 2 secunde fixat
+async function fetchAlbumArt(title, stationRef) {
+    if (!title || title.length < 3) {
+        if (stationRef.isInitialBgSource) applyImageToUI(stationRef.originalImg, stationRef, true);
+        return;
+    }
+
+    let itunesFinished = false;
+
+    // Timer de 2 secunde: dacă iTunes nu termină, punem logo-ul
+    if (stationRef.isInitialBgSource) {
+        setTimeout(() => {
+            if (!itunesFinished) {
+                console.log("iTunes prea lent, aplicăm logo-ul.");
+                applyImageToUI(stationRef.originalImg, stationRef, true);
+            }
+        }, 2000);
+    }
+
+    try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
+        const data = await res.json();
+        itunesFinished = true; // iTunes a răspuns (chiar și cu 0 rezultate)
+        
+        if (data.results && data.results.length > 0) {
+            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
+            applyImageToUI(newImg, stationRef, false);
+        } else {
+            // iTunes a răspuns dar nu a găsit nimic
+            applyImageToUI(stationRef.originalImg, stationRef, true);
+        }
+    } catch (e) {
+        itunesFinished = true;
+        applyImageToUI(stationRef.originalImg, stationRef, true);
+    }
+}
+
+// 3. Funcția care "aprinde" fundalul (CSS opacity 1)
+function applyImageToUI(imgUrl, stationRef, isFallback) {
+    const bg1 = document.getElementById('bg-layer-1');
+    const playerImg1 = document.getElementById('player-img-1');
+    
+    const tempImg = new Image();
+    tempImg.src = imgUrl;
+    tempImg.onload = () => {
+        stationRef.img = imgUrl;
+
+        // Dacă e Heart 10s la pornire, forțăm fundalul să fie vizibil
+        if (stationRef.isInitialBgSource) {
+            bg1.style.backgroundImage = `url(${imgUrl})`;
+            bg1.style.opacity = "1"; // <--- Aici facem fundalul vizibil
+            if (playerImg1) playerImg1.src = imgUrl;
+        }
+
+        // Dacă stația e cea activă (se ascultă acum)
+        if (activeStationObject && activeStationObject.name === stationRef.name) {
+            updateArtUI(imgUrl);
+        }
+        
+        // Update miniaturi în listă
+        document.querySelectorAll('.station-item').forEach(item => {
+            if(item.getAttribute('data-name') === stationRef.name) {
+                const thumb = item.querySelector('.station-thumb');
+                if(thumb) thumb.src = imgUrl;
+            }
+        });
+    };
+}
+
 
 function updateArtUI(newImg) {
     const art1 = document.getElementById('player-img-1'); const art2 = document.getElementById('player-img-2');
@@ -501,8 +932,12 @@ async function fetchAlbumArt(title, stationRef) {
                 if(item.getAttribute('data-name') === stationRef.name) {
                     const thumb = item.querySelector('.station-thumb');
                     const desc = item.querySelector('.station-desc');
-                    if(thumb) thumb.src = newImg;
-                    if(desc) desc.innerText = stationRef.desc;
+                    thumb.style.opacity = '0';
+                    setTimeout(() => {
+                        thumb.src = newImg;
+                        thumb.style.opacity = '1';
+                        if(desc) desc.innerText = stationRef.desc;
+                    }, 400);
                 }
             });
         }
@@ -518,33 +953,75 @@ function updateUIMetadata(station) {
     }
 }
 
-async function fetchMetadata(streamUrl, stationRef) {
-    const requestId = ++currentMetadataRequestId;
+async function fetchAlbumArt(title, stationRef) {
+    if (!title || title.length < 3) return;
+
+    let fallbackTimeout = null;
+
+    // DOAR LA PORNIRE: Setăm cronometrul de 2 secunde pentru Heart 10s
+    if (stationRef.isInitialBgSource) {
+        fallbackTimeout = setTimeout(() => {
+            console.log("Prima pornire: iTunes lent. Punem logo Heart 10s.");
+            applyImageToUI(stationRef.originalImg, stationRef, true);
+        }, 2000);
+    }
+
     try {
-        const response = await fetch(streamUrl, { headers: { "Icy-MetaData": "1" } });
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let metaInt = parseInt(response.headers.get("icy-metaint"));
-        if (!metaInt) return;
-        let buffer = new Uint8Array();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done || requestId !== currentMetadataRequestId) break;
-            let temp = new Uint8Array(buffer.length + value.length); temp.set(buffer); temp.set(value, buffer.length); buffer = temp;
-            while (buffer.length >= metaInt + 1) {
-                let metaLength = buffer[metaInt] * 16;
-                if (buffer.length < metaInt + 1 + metaLength) break;
-                let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
-                let match = metaString.match(/StreamTitle='([^']*)'/);
-                if (match && match[1]) {
-                    let nt = match[1].replace(/;/g, "").trim();
-                    if (stationRef.currentTrack !== nt) { stationRef.desc = nt; stationRef.currentTrack = nt; updateUIMetadata(stationRef); }
-                }
-                buffer = buffer.slice(metaInt + 1 + metaLength);
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+            // Dacă iTunes a răspuns, anulăm cronometrul (dacă există)
+            if (fallbackTimeout) clearTimeout(fallbackTimeout);
+
+            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
+            applyImageToUI(newImg, stationRef, false);
+        }
+    } catch (e) {
+        // În caz de eroare rețea, forțăm imaginea originală dacă e la pornire
+        if (stationRef.isInitialBgSource) applyImageToUI(stationRef.originalImg, stationRef, true);
+    }
+}
+
+function applyImageToUI(imgUrl, stationRef, isFallback) {
+    const tempImg = new Image();
+    tempImg.src = imgUrl;
+    tempImg.onload = () => {
+        stationRef.img = imgUrl;
+
+        // 1. Gestionare Fundal Inițial (Heart 10s)
+        if (stationRef.isInitialBgSource && audio.paused && (!activeStationObject || !activeStationObject.isPlayingNow)) {
+            const bg1 = document.getElementById('bg-layer-1');
+            bg1.style.backgroundImage = `url(${imgUrl})`;
+            
+            // Forțăm vizibilitatea fluidă
+            setTimeout(() => { bg1.style.opacity = '1'; }, 50);
+            
+            // Dacă am aplicat deja o imagine (fie ea metadata sau fallback), 
+            // marcăm că nu mai avem nevoie de sursa inițială
+            if (!isFallback || imgUrl === stationRef.originalImg) {
+                // Opțional: putem lăsa isInitialBgSource true până la primul Play
             }
         }
-    } catch (err) {}
+
+        // 2. Gestionare Player Activ (Schimbare radio/Play)
+        // Dacă stația care tocmai a primit imaginea este cea selectată în Player
+        if (activeStationObject && activeStationObject.name === stationRef.name) {
+            updateArtUI(imgUrl);
+        }
+        
+        // 3. Update Miniaturi Listă
+        document.querySelectorAll('.station-item').forEach(item => {
+            if(item.getAttribute('data-name') === stationRef.name) {
+                const thumb = item.querySelector('.station-thumb');
+                if(thumb) thumb.src = imgUrl;
+            }
+        });
+    };
 }
+
+
+
 
 function updateSliderText() {
     if (currentFilteredList.length === 0) return;
@@ -562,17 +1039,49 @@ function updateSlide(id, data) {
     el.querySelector('p').innerText = data.desc; 
 }
 
-function loadStationInfo(idx, sp = true) {
+// În interiorul funcției loadStationInfo(idx, sp = true)
+
+function loadStationInfo(idx, sp = true, skipArt = false) {
     if (currentFilteredList.length === 0) return;
     const s = currentFilteredList[idx];
-    updateArtUI(s.img || FALLBACK_IMG);
+    
+    // DEZACTIVĂM starea de "Prima pornire" imediat ce utilizatorul interacționează
+    if (sp) {
+        stations.forEach(st => st.isInitialBgSource = false);
+    }
+
+    activeStationObject = s;
+
+    // Când dăm play, dezactivăm sursa de fundal inițială (Heart 10s)
+    if (sp) {
+        stations.forEach(st => st.isInitialBgSource = false);
+        s.isPlayingNow = true;
+        updateArtUI(s.img || FALLBACK_IMG);
+    } else if (!skipArt) {
+        updateArtUI(s.img || FALLBACK_IMG);
+    }
+
+    // ... restul codului pentru YouTube și Metadata rămâne la fel ...
+    const ytBtn = document.getElementById('player-yt-btn');
+    if (s.yt) { ytBtn.href = s.yt; ytBtn.classList.remove('yt-hidden'); } 
+    else { ytBtn.classList.add('yt-hidden'); }
+
     if (metadataInterval) clearInterval(metadataInterval);
     currentMetadataRequestId++; 
     audio.src = s.stream;
-    setTimeout(() => { fetchMetadata(s.stream, s); metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 15000); }, 1000);
+
+    setTimeout(() => { 
+        fetchMetadata(s.stream, s); 
+        metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 15000); 
+    }, 3000);
+
     if(sp) { updateUI('loading'); audio.play().catch(()=>{}); }
     updateMediaSession(s);
 }
+
+
+
+
 
 function playStation() { updateSliderText(); loadStationInfo(currentIdx, true); switchTab('player'); }
 function next() { currentIdx = (currentIdx + 1) % currentFilteredList.length; animateTransition('next'); }
@@ -598,27 +1107,21 @@ function setupSwipe() {
 }
 
 function togglePlay() { 
-    if (audio.paused) { updateUI('loading'); audio.play().catch(() => updateUI(false)); } 
-    else { audio.pause(); }
-}
-
-function updateMediaSession(station) {
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: station.desc,
-            artist: station.name,
-            album: "Sergiu FM",
-            artwork: [{ src: station.img || FALLBACK_IMG, sizes: '512x512', type: 'image/png' }]
-        });
-        navigator.mediaSession.setActionHandler('play', () => audio.play());
-        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-        navigator.mediaSession.setActionHandler('previoustrack', () => prev());
-        navigator.mediaSession.setActionHandler('nexttrack', () => next());
+    if (audio.paused) {
+        // Dacă nu cântă nimic, forțăm încărcarea stației curente din listă (cu tot cu artă)
+        // Folosim parametrul false la final pentru skipArt, ca să AFIDEZE coperta
+        loadStationInfo(currentIdx, true, false); 
+    } else {
+        audio.pause(); 
     }
 }
+
+
+
 
 init();
 </script>
 </body>
 </html>
+
 
