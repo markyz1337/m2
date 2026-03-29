@@ -422,40 +422,76 @@ const stations = [
 stations.forEach(s => { s.originalDesc = s.desc; s.originalImg = s.img; s.currentTrack = ""; });
 
 function init() {
-    // 1. Citim query-ul (care a fost pus acolo de 404.html)
+    // 1. Citim query-ul trimis de 404.html (ex: ?man sau ?hope)
     const urlQuery = window.location.search.substring(1);
     let autoStartStation = null;
 
     if (urlQuery) {
-        const targetName = decodeURIComponent(urlQuery).toLowerCase();
-        autoStartStation = stations.find(s => s.name.toLowerCase() === targetName);
+        // Decodăm textul (ex: %20 devine spațiu) și îl facem litere mici
+        const targetName = decodeURIComponent(urlQuery).toLowerCase().trim();
+        
+        // Căutare inteligentă: Găsește prima stație care CONȚINE textul scris în URL
+        autoStartStation = stations.find(s => 
+            s.name.toLowerCase().includes(targetName)
+        );
 
-        // CURĂȚĂM URL-ul: Facem link-ul să arate curat în browser (fără ?)
         if (autoStartStation) {
-            const cleanPath = window.location.pathname.replace(/\/$/, "") + "/" + autoStartStation.name;
+            // Curățăm URL-ul în bara de adrese: 
+            // - Scoatem "/" de la final dacă există
+            // - Adăugăm numele complet al stației găsit
+            // - replace(/\s+/g, '') scoate spațiile pentru un link tip: /m2/heart10s
+            const cleanName = autoStartStation.name.toLowerCase().replace(/\s+/g, '');
+            const cleanPath = window.location.pathname.replace(/\/$/, "") + "/" + cleanName;
+            
             window.history.replaceState({}, "", cleanPath);
         }
     }
 
-    // 2. Logică de pornire (rămâne la fel ca înainte)
+    // 2. Logică de pornire condiționată
     if (autoStartStation) {
+        // Dacă am găsit ceva prin URL, forțăm tab-ul 'all' ca să existe în listă
         renderList('all', document.getElementById('tab-all'));
+        
+        // Găsim indexul stației în lista filtrată curentă
         currentIdx = currentFilteredList.indexOf(autoStartStation);
-        loadStationInfo(currentIdx, true); 
+        
+        // Încărcăm stația și activăm Playerul
+        // sp=true (pornește muzica), skipArt=false (arată coperta)
+        loadStationInfo(currentIdx, true, false); 
         switchTab('player');
     } else {
+        // PORNIRE NORMALĂ (fără link direct sau dacă căutarea a eșuat)
         const heart10s = stations.find(s => s.name === "Heart 10s");
         if (heart10s) {
             heart10s.isInitialBgSource = true; 
             fetchSilentMetadata(heart10s); 
         }
+        
+        // Afișăm lista 'mine' (Owned) implicit
         renderList('mine', document.getElementById('tab-mine'));
+        
+        // Încărcăm prima stație din listă dar FĂRĂ autoplay (sp=false)
         loadStationInfo(0, false, true);
     }
+
+    // 3. Inițializare componente vizuale și gesturi
+    updateSliderText();
+    setupSwipe();        // Swipe pe copertă/text
+    setupFabSwipe();     // Gesturi pe butonul plutitor
+    scanAllStations();   // Verifică metadatele pentru toate stațiile
+
+    // 4. Engine Audio Listeners (Actualizează butoanele de Play/Pause/Loading)
+    audio.addEventListener('waiting', () => updateUI('loading'));
+    audio.addEventListener('playing', () => updateUI(true));
+    audio.addEventListener('pause', () => updateUI(false));
     
-    // Restul inițializărilor...
-    updateSliderText(); setupSwipe(); setupFabSwipe(); scanAllStations();
+    // Gestionare eroare (ex: link de stream mort)
+    audio.addEventListener('error', () => {
+        console.error("Eroare la redarea fluxului audio.");
+        updateUI(false);
+    });
 }
+
 
 
 
