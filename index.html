@@ -422,29 +422,30 @@ const stations = [
 stations.forEach(s => { s.originalDesc = s.desc; s.originalImg = s.img; s.currentTrack = ""; });
 
 function init() {
-    // 1. Verificăm dacă avem o stație în URL
-    const stationNameFromUrl = getStationFromURL();
+    // 1. Verificăm dacă avem parametru în URL (ex: ?station=Manele)
+    const params = new URLSearchParams(window.location.search);
+    const stationNameFromUrl = params.get('station');
     let autoStartStation = null;
 
     if (stationNameFromUrl) {
-        // Căutăm stația în lista mare (indiferent de tab-ul curent)
         autoStartStation = stations.find(s => 
             s.name.toLowerCase() === stationNameFromUrl.toLowerCase()
         );
     }
 
-    // 2. Logică de pornire
+    // 2. Logică de pornire condiționată
     if (autoStartStation) {
-        // Dacă am găsit stația din link, o setăm ca activă
-        // Forțăm randarea listei 'all' pentru a asigura contextul
+        // Dacă venim de pe un link direct
         renderList('all', document.getElementById('tab-all'));
         currentIdx = currentFilteredList.indexOf(autoStartStation);
         
-        // Pornim direct Playerul
+        // Încărcăm stația, dar NU forțăm play direct (sp = true) 
+        // deoarece browserul oricum ar bloca sunetul la prima încărcare.
+        // Utilizatorul va vedea playerul deschis și va apăsa Play.
         loadStationInfo(currentIdx, true); 
         switchTab('player');
     } else {
-        // Comportamentul tău original (Heart 10s pe fundal)
+        // Pornire normală (fără link direct)
         const heart10s = stations.find(s => s.name === "Heart 10s");
         if (heart10s) {
             heart10s.isInitialBgSource = true; 
@@ -454,16 +455,24 @@ function init() {
         loadStationInfo(0, false, true);
     }
 
+    // 3. Inițializare restul componentelor
     updateSliderText();
     setupSwipe();
     setupFabSwipe();
     scanAllStations();
 
-    // Event listeners...
+    // Event Listeners pentru Audio Engine
     audio.addEventListener('waiting', () => updateUI('loading'));
     audio.addEventListener('playing', () => updateUI(true));
     audio.addEventListener('pause', () => updateUI(false));
+    
+    // Eroare de rețea sau stream picat
+    audio.addEventListener('error', () => {
+        console.error("Eroare la încărcarea stream-ului.");
+        updateUI(false);
+    });
 }
+
 
 
 function getStationFromURL() {
@@ -1045,29 +1054,30 @@ function loadStationInfo(idx, sp = true, skipArt = false) {
     if (currentFilteredList.length === 0) return;
     const s = currentFilteredList[idx];
     
-    // DEZACTIVĂM starea de "Prima pornire" imediat ce utilizatorul interacționează
+    // Dezactivăm starea de fundal inițială
     if (sp) {
         stations.forEach(st => st.isInitialBgSource = false);
     }
 
     activeStationObject = s;
 
-    // Când dăm play, dezactivăm sursa de fundal inițială (Heart 10s)
-    if (sp) {
-        stations.forEach(st => st.isInitialBgSource = false);
-        s.isPlayingNow = true;
-        updateArtUI(s.img || FALLBACK_IMG);
-    } else if (!skipArt) {
+    // Actualizăm interfața (Copertă și Buton YouTube)
+    if (sp || !skipArt) {
         updateArtUI(s.img || FALLBACK_IMG);
     }
 
-    // ... restul codului pentru YouTube și Metadata rămâne la fel ...
     const ytBtn = document.getElementById('player-yt-btn');
-    if (s.yt) { ytBtn.href = s.yt; ytBtn.classList.remove('yt-hidden'); } 
-    else { ytBtn.classList.add('yt-hidden'); }
+    if (s.yt) { 
+        ytBtn.href = s.yt; 
+        ytBtn.classList.remove('yt-hidden'); 
+    } else { 
+        ytBtn.classList.add('yt-hidden'); 
+    }
 
+    // Gestionare Metadate
     if (metadataInterval) clearInterval(metadataInterval);
     currentMetadataRequestId++; 
+    
     audio.src = s.stream;
 
     setTimeout(() => { 
@@ -1075,9 +1085,18 @@ function loadStationInfo(idx, sp = true, skipArt = false) {
         metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 15000); 
     }, 3000);
 
-    if(sp) { updateUI('loading'); audio.play().catch(()=>{}); }
+    // Încercare redare cu gestionare eroare Autoplay
+    if(sp) { 
+        updateUI('loading'); 
+        audio.play().catch(error => {
+            console.warn("Autoplay a fost blocat. Utilizatorul trebuie să apese Play manual.");
+            updateUI(false); // Oprește rotirea și arată butonul de Play
+        }); 
+    }
+    
     updateMediaSession(s);
 }
+
 
 
 
