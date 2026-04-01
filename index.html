@@ -1,669 +1,396 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Sergiu FM</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="icon" href="favicon.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Sergiu FM">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<script src="https://unpkg.com/lucide@latest"></script>
-<style>
-:root {
-    --accent: #ff5e3a;
-    --glass: rgba(255, 255, 255, 0.1);
-    --bg-dark: #000000;
-}
-
-* { 
-    box-sizing: border-box; 
-    margin: 0; padding: 0; 
-    font-family: 'Inter', sans-serif; 
-    -webkit-tap-highlight-color: transparent; 
-    -webkit-user-select: none;
-    user-select: none;
-    overscroll-behavior: none;
-}
-
-
-
-
-/* Stiluri pentru Egalizatorul din Listă */
-.playing-icon {
-    display: none;
-    align-items: flex-end;
-    gap: 2px;
-    width: 20px;
-    height: 20px;
-    margin-left: 10px;
-}
-
-.station-item.is-playing .playing-icon {
-    display: flex; /* Se afișează doar când părintele are clasa .is-playing */
-}
-
-/* Egalizatorul optimizat */
-.playing-icon span {
-    display: inline-block;
-    width: 3px;
-    background: linear-gradient(to top, var(--accent), #ff9d85); 
-    border-radius: 2px;
-    animation: bounce 0.5s ease-in-out infinite alternate;
-    box-shadow: 0 0 3px var(--accent), 0 0 5px rgba(255, 94, 58, 0.4);
-}
-
-/* Titlul postului care rulează cu efect de Neon discret */
-.station-item.is-playing .station-name {
-    color: var(--accent);
-    /* Aplicăm același tip de glow subtil ca la egalizator */
-    text-shadow: 0 0 25px var(--accent), 0 0 6px rgba(255, 94, 58, 0.2);
-    transition: all 0.4s ease;
-}
-
-
-
-
-.playing-icon span:nth-child(2) { animation-duration: 0.7s; }
-.playing-icon span:nth-child(3) { animation-duration: 0.6s; }
-
-@keyframes bounce {
-    from { height: 5px; }
-    to { height: 18px; }
-}
-
-/* Stil pentru a evidenția rândul activ (opțional) */
-.station-item.is-playing .station-name {
-    color: var(--accent);
-}
-
-
-::-webkit-scrollbar { display: none; }
-* { scrollbar-width: none; -ms-overflow-style: none; }
-
-body { 
-    background: var(--bg-dark); 
-    color: white; 
-    height: 100dvh; 
-    width: 100vw;
-    overflow: hidden; /* Previne scroll-ul pe body */
-    display: flex; 
-    justify-content: center;
-    touch-action: pan-y; /* Permite doar gesturi verticale, util pentru acuratețe */
-}
-
-
-/* Containerul butonului - poziționat peste copertă */
-.player-yt-link {
-    position: absolute;
-    right: 11px;
-    bottom: 11px;
-    z-index: 35;
-    display: flex;
-    background: rgba(0, 0, 0, 0.7); /* Fundal semitransparent ca să se vadă pe orice poză */
-    backdrop-filter: blur(5px);
-    border-radius: 18px;
-    padding: 4px;
-    transition: transform 0.3s ease, opacity 0.5s ease, visibility 0.5s ease;
-    opacity: 0.8;
-    visibility: visible;
-    text-decoration: none;
-}
-
-/* LIMITAREA ICONIȚEI - Aceasta este partea care rezolvă problema "gigantului" */
-.player-yt-link img {
-    width: 36px;  /* Dimensiune mică, controlată */
-    height: 36px;
-    display: block;
-    object-fit: contain;
-}
-
-/* Efect de apăsare */
-.player-yt-link:active {
-    transform: scale(0.9);
-}
-
-/* Stilul pentru când butonul trebuie să fie ascuns */
-.yt-hidden {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none;
-    transform: scale(0.7);
-}
-
-
-
-
-.app-container {
-    width: 100%; max-width: 430px; height: 100%; position: relative; overflow: hidden;
-    display: flex; flex-direction: column;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Modifică/Înlocuiește aceste părți în <style> */
-.bg-blur {
-    position: absolute; 
-    top: -10%; left: -10%; width: 120%; height: 120%;
-    background-size: cover; 
-    background-position: center;
-    filter: blur(40px) brightness(0.4) saturate(1.2);
-    z-index: 0; 
-    opacity: 0; /* Toate pornesc de la 0 */
-    transition: opacity 1.5s ease-in-out; /* Tranziție lungă */
-    will-change: opacity;
-}
-
-@keyframes bgBreathe {
-    0%, 100!% { transform: scale(1.0) rotate(0deg); }
-    50% { transform: scale(1.1) rotate(5deg); }
-}
-
-.header-tabs { 
-    position: relative; z-index: 10; 
-    padding: 15px 20px 10px; 
-    display: flex; gap: 10px; overflow-x: auto; 
-}
-
-.tab { 
-    background: var(--glass); 
-    padding: 8px 18px; 
-    border-radius: 20px; 
-    font-size: 13px; 
-    backdrop-filter: blur(10px); 
-    border: 1px solid rgba(255,255,255,0.1); 
-    cursor: pointer; 
-    white-space: nowrap;
-    font-weight: 800;
-    transition: background-color 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.2s ease;
-}
-.tab.active { background: var(--accent); border-color: transparent; font-weight: 900; }
-.tab:active { transform: scale(0.95); }
-
-
-.content { 
-    position: relative; 
-    z-index: 10; 
-    flex: 1; 
-    padding: 0 20px 140px 20px; 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sergiu FM</title>
     
-    /* Activează scroll-ul pe verticală */
-    overflow-y: auto; 
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sergiu FM">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
     
-    /* === ADAUGĂ ACESTE LINII PENTRU EFECTUL ELASTIC === */
-    /* Permite "overscroll" (trecerea peste limită) cu efect de bounce */
-    overscroll-behavior-y: contain; 
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-180.png">
     
-    /* Asigură fluiditatea scroll-ului pe iOS */
-    -webkit-overflow-scrolling: touch; 
-}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-.station-item { 
-    display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
-    border-image: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent) 1; 
-}
+    <style>
+        :root {
+            --accent: #ff5e3a;
+            --glass: rgba(255, 255, 255, 0.1);
+            --bg-dark: #000000;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
 
-.station-thumb { 
-    width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; 
-    object-fit: cover; background: #111; 
-    transition: opacity 0.8s ease, transform 0.5s ease;
-}
+        * { 
+            box-sizing: border-box; 
+            margin: 0; padding: 0; 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none;
+            user-select: none;
+            overscroll-behavior: none;
+        }
 
-.station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-.station-desc { 
-    font-size: 11px; color: #b3b3b3; text-transform: uppercase;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;  
-    overflow: hidden; line-height: 1.4; max-height: 2.8em;
-    transition: color 0.5s ease;
-}
+        html, body {
+            height: 100dvh;
+            width: 100vw;
+            background: var(--bg-dark);
+            color: white;
+            overflow: hidden;
+            position: fixed; /* Previne scroll-ul elastic al paginii întregi pe iOS */
+        }
 
-.owned-yt-btn {
-    width: 50px; height: 50px;
-    display: flex; align-items: center; justify-content: center;
-    margin-left: 10px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-.owned-yt-btn:active { transform: scale(0.85); }
-.owned-yt-btn img {
-    width: 30px; height: 30px;
-    object-fit: contain; opacity: 0.80; 
-}
+        /* Aplicația ocupă tot ecranul, inclusiv sub status bar */
+        .app-container {
+            width: 100%; 
+            max-width: 430px; 
+            height: 100dvh; 
+            margin: 0 auto;
+            position: relative; 
+            overflow: hidden;
+            display: flex; 
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
 
-#player-view { display: none; position: relative; z-index: 10; height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0 100px 0; }
+        .app-ready .app-container { opacity: 1; }
 
-.art-container { width: 280px; height: 280px; position: relative; margin-bottom: 30px; }
-.main-art { 
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); object-fit: cover; 
-    background: #111; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
-}
-.art-hidden { opacity: 0; transform: scale(0.95); }
-.art-visible { opacity: 1; transform: scale(1); }
+        /* Background Layers */
+        .bg-blur {
+            position: absolute; 
+            top: -10%; left: -10%; width: 120%; height: 120%;
+            background-size: cover; 
+            background-position: center;
+            filter: blur(40px) brightness(0.3) saturate(1.4);
+            z-index: 0; 
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            will-change: opacity;
+        }
 
-.track-viewport { width: 100%; overflow: hidden; margin-bottom: 30px; position: relative; }
-.track-slider-wrapper { display: flex; width: 300%; transform: translateX(-33.333%); will-change: transform; }
-.track-info-slide { width: 33.333%; text-align: center; padding: 0 45px; flex-shrink: 0; }
-.track-info-slide h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track-info-slide p { color: #b3b3b3; font-size: 13px; text-transform: uppercase; line-height: 1.5; min-height: 3em; }
+        /* HEADER & TABS - Respectă Safe Area (Notch) */
+        .header-tabs { 
+            position: relative; z-index: 10; 
+            padding: calc(var(--safe-top) + 15px) 20px 10px; 
+            display: flex; gap: 10px; overflow-x: auto; 
+        }
 
-.main-controls { display: flex; align-items: center; gap: 35px; margin-bottom: 20px; }
-.btn-round { 
-    background: var(--glass); width: 58px; height: 58px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; cursor: pointer; 
-    backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); color: white;
-}
+        .tab { 
+            background: var(--glass); 
+            padding: 8px 18px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            cursor: pointer; 
+            white-space: nowrap;
+            font-weight: 800;
+            transition: all 0.3s ease;
+        }
+        .tab.active { background: var(--accent); border-color: transparent; }
 
-.btn-play { background: #fff; color: #000; width: 75px; height: 75px; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.btn-play.playing { 
-    background: var(--accent); 
-    color: #fff; 
-    transform: scale(1.1);
-    box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
-    animation: pulseGlow 3s infinite ease-in-out;
-}
+        /* CONTENT AREA */
+        .content { 
+            position: relative; 
+            z-index: 10; 
+            flex: 1; 
+            padding: 0 20px calc(var(--safe-bottom) + 140px) 20px; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+        }
 
-@keyframes pulseGlow {
-    0%, 100% { 
-        box-shadow: 0 0 15px rgba(255, 94, 58, 0.3); 
-        transform: scale(1.05); 
-    }
-    50% { 
-        box-shadow: 0 0 50px rgba(255, 94, 58, 0.7); 
-        transform: scale(1.10); /* O ușoară mărire suplimentară la mijlocul pulsului */
-    }
-}
+        .station-item { 
+            display: flex; align-items: center; padding: 15px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
 
+        .station-thumb { 
+            width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; 
+            object-fit: cover; background: #111; 
+        }
 
-.spin { animation: spin 1s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .station-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+        .station-desc { font-size: 11px; color: #b3b3b3; text-transform: uppercase; }
 
-.nav-bar { 
-    position: absolute; bottom: 20px; left: 25px; right: 25px; z-index: 50; 
-    background: rgba(25,25,25,0.8); backdrop-filter: blur(25px); border-radius: 40px; 
-    display: flex; justify-content: space-around; padding: 8px; border: 1px solid rgba(255,255,255,0.08); 
-}
-.nav-bar::before {
-    content: ''; position: absolute; top: 8px; left: 8px; width: calc(50% - 8.5px); height: calc(100% - 16px);
-    background: rgba(255, 255, 255, 0.08); border-radius: 35px;
-    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: -1;
-}
-.nav-bar.on-radio::before { transform: translateX(100%); }
-.nav-bar.on-player::before { transform: translateX(0%); }
+        /* PLAYER VIEW */
+        #player-view { 
+            display: none; position: relative; z-index: 10; height: 100%; 
+            flex-direction: column; align-items: center; justify-content: center; 
+            padding-bottom: calc(var(--safe-bottom) + 100px);
+        }
 
-.nav-link { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; width: 50%; color: #777; cursor: pointer; font-size: 11px; }
-.nav-link.active { color: #fff; }
-.nav-link.active i { color: var(--accent); }
+        .art-container { width: 280px; height: 280px; position: relative; margin-bottom: 30px; }
+        .main-art { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); object-fit: cover; 
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        .art-hidden { opacity: 0; transform: scale(0.9); }
+        .art-visible { opacity: 1; transform: scale(1); }
 
-.fab { 
-    position: absolute; 
-    bottom: 115px; 
-    right: 31px; 
-    background: #fff; 
-    color: #000;      
-    width: 56px; 
-    height: 56px; 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3); 
-    z-index: 15; 
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+        .track-viewport { width: 100%; overflow: hidden; margin-bottom: 30px; }
+        .track-slider-wrapper { display: flex; width: 300%; transform: translateX(-33.333%); will-change: transform; }
+        .track-info-slide { width: 33.333%; text-align: center; padding: 0 45px; }
+        .track-info-slide h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; line-height: 1.2; }
 
-.fab.playing {
-    background: var(--accent); 
-    color: #fff;               
-    transform: scale(1.1);
-    box-shadow: 0 0 30px rgba(255, 94, 58, 0.6);
-    animation: pulseGlow 3s infinite ease-in-out;
-}
+        /* CONTROLS */
+        .main-controls { display: flex; align-items: center; gap: 35px; }
+        .btn-round { 
+            background: var(--glass); width: 60px; height: 60px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); color: white;
+        }
+        .btn-play { background: #fff; color: #000; width: 75px; height: 75px; }
+        .btn-play.playing { background: var(--accent); color: #fff; box-shadow: 0 0 30px rgba(255, 94, 58, 0.5); }
 
+        /* NAV BAR - Sticky la baza ecranului (Dynamic Island aware) */
+        .nav-bar { 
+            position: absolute; bottom: calc(var(--safe-bottom) + 20px); left: 25px; right: 25px; 
+            z-index: 50; background: rgba(25,25,25,0.8); backdrop-filter: blur(25px); 
+            border-radius: 40px; display: flex; padding: 8px; border: 1px solid rgba(255,255,255,0.08);
+            transform: translateY(100px); transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .nav-bar.visible { transform: translateY(0); }
+        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #777; font-size: 10px; font-weight: 600; cursor: pointer; }
+        .nav-link.active { color: #fff; }
+        .nav-link.active i { color: var(--accent); }
 
+        /* FAB */
+        .fab { 
+            position: absolute; bottom: calc(var(--safe-bottom) + 115px); right: 30px; 
+            background: #fff; color: #000; width: 56px; height: 56px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; z-index: 40;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0; transform: scale(0.5);
+        }
+        .fab.visible { opacity: 1; transform: scale(1); }
+        .fab.playing { background: var(--accent); color: #fff; }
 
-</style>
+        /* Animations */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+
+        /* Equalizer in List */
+        .playing-icon { display: none; align-items: flex-end; gap: 2px; width: 20px; height: 20px; }
+        .station-item.is-playing .playing-icon { display: flex; }
+        .playing-icon span { width: 3px; background: var(--accent); border-radius: 2px; animation: bounce 0.5s infinite alternate; }
+        @keyframes bounce { from { height: 4px; } to { height: 16px; } }
+    </style>
 </head>
 <body oncontextmenu="return false;">
+
 <div class="app-container">
     <div class="bg-blur" id="bg-layer-1"></div>
     <div class="bg-blur" id="bg-layer-2"></div>
 
-        <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
-<div class="header-tabs">
-    <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
-    <div class="tab" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
-    <div class="tab active" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
-    <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
-</div>
-
-        <div class="content" id="stations-list"></div>
-        
-<div class="fab" id="fab-play-pause" onclick="togglePlay()">
-    <i data-lucide="play" fill="currentColor"></i>
-</div>
-
-
-    </div> <div id="player-view">
-        <div class="art-container" id="swipe-zone-art">
-            <img src="" class="main-art art-visible" id="player-img-1" onerror="this.src=FALLBACK_IMG">
-            <img src="" class="main-art art-hidden" id="player-img-2" onerror="this.src=FALLBACK_IMG">
-            
-<a id="player-yt-btn" href="#" target="_blank" class="player-yt-link yt-hidden">
-    <img src="https://cdn-icons-png.flaticon.com/512/10610/10610674.png" alt="YouTube Link">
-</a>
+    <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
+        <div class="header-tabs">
+            <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
+            <div class="tab" id="tab-fav" onclick="renderList('fav', this)">Favorites</div>
+            <div class="tab active" id="tab-mine" onclick="renderList('mine', this)">Owned</div>
+            <div class="tab" id="tab-russian" onclick="renderList('russian', this)">Russian</div>
         </div>
+        <div class="content" id="stations-list"></div>
+        <div class="fab" id="fab-play-pause" onclick="togglePlay()">
+            <i data-lucide="play" fill="currentColor"></i>
+        </div>
+    </div> 
 
+    <div id="player-view">
+        <div class="art-container" id="swipe-zone-art">
+            <img src="" class="main-art art-visible" id="player-img-1">
+            <img src="" class="main-art art-hidden" id="player-img-2">
+        </div>
         <div class="track-viewport" id="swipe-zone-text">
             <div class="track-slider-wrapper" id="info-wrapper">
-                <div class="track-info-slide" id="slide-prev"><h2>Post Anterior</h2><p>Gen</p></div>
+                <div class="track-info-slide" id="slide-prev"><h2>-</h2><p>-</p></div>
                 <div class="track-info-slide" id="slide-current"><h2>Alege un post</h2><p>Radio Player</p></div>
-                <div class="track-info-slide" id="slide-next"><h2>Post Următor</h2><p>Gen</p></div>
+                <div class="track-info-slide" id="slide-next"><h2>-</h2><p>-</p></div>
             </div>
         </div>
-
         <div class="main-controls">
-            <div class="btn-round" id="btn-prev" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
+            <div class="btn-round" onclick="prev()"><i data-lucide="skip-back" fill="currentColor"></i></div>
             <div class="btn-round btn-play" id="play-trigger" onclick="togglePlay()"><i data-lucide="play" fill="currentColor"></i></div>
-            <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
+            <div class="btn-round" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
         </div>
     </div>
 
-
-    <div class="nav-bar on-radio" id="main-nav">
-        <div class="nav-link" id="nav-player" onclick="switchTab('player')"><i data-lucide="play-circle"></i><span>Player</span></div>
-        <div class="nav-link active" id="nav-list" onclick="switchTab('list')"><i data-lucide="radio"></i><span>Radio</span></div>
+    <div class="nav-bar" id="main-nav">
+        <div class="nav-link active" id="nav-list" onclick="switchTab('list')">
+            <i data-lucide="radio"></i><span>Radio</span>
+        </div>
+        <div class="nav-link" id="nav-player" onclick="switchTab('player')">
+            <i data-lucide="play-circle"></i><span>Player</span>
+        </div>
     </div>
 </div>
 
-<audio id="audio-engine" preload="auto" crossorigin="anonymous"></audio>
+<audio id="audio-engine" preload="auto" crossorigin="anonymous" playsinline></audio>
 
 <script>
+/** --- CONFIG & DATA --- **/
 let currentIdx = 0;
-let currentFilteredList = []; 
-let activeBGLayer = 1;
-let activeArtLayer = 1; 
-let startX = 0;
+let currentFilteredList = [];
 let activeStationObject = null;
-let isDragging = false;
-let currentMetadataRequestId = 0;
-let metadataInterval = null;
+let isTransitioning = false;
+let activeArtLayer = 1;
 
 const audio = document.getElementById('audio-engine');
-const wrapper = document.getElementById('info-wrapper');
-const FALLBACK_IMG = "https://store-images.s-microsoft.com/image/apps.54675.13982720394888960.16320d2b-98f6-4b3b-af8d-f33140cf192a.778f4c59-a76c-44c0-82f7-bd7357649848";
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000&auto=format&fit=crop";
 
 const stations = [
-    { name: "Heart 10s", stream: "https://media-ice.musicradio.com/Heart10sMP3", img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", desc: "POP, HITS, CHART", isFav: true, isAll: true },
-    { name: "Kiss 10s", stream: "https://dc.digi.live.kissfm.ro/kiss.hits.from.the.10s/listen.m3u", img: "https://api.kissfm.ro/resized/streams/homepage/2025/01/10/cover-kiss-hits-from-the-10s_6210a8bb4e6b58d8b6d2c0342721cdb9.png", desc: "HITS FROM THE 10S", isFav: true, isAll: true },
-    { name: "Millenium Hits", stream: "https://dc.digi.live.kissfm.ro/milleniumhits", img: "https://api.kissfm.ro/resized/streams/homepage/2024/10/07/homepage-logo-kiss-millenium-hits_bd81e49f11f3edfff722aecb28f9ae34.png", desc: "KISS MILLENIUM HITS", isAll: true },
-    { name: "ONE FM DANCE", stream: "https://live.onefm.ro/onefm.aacp", img: "https://onefm.es/wp-content/uploads/2023/09/LOGO-2025.jpg", desc: "DANCE, HOUSE, TECHNO", isAll: true },
-    { name: "Positively 10s", stream: "https://streaming.positivity.radio/pr/posi10s/icecast.audio", img: "https://cdn.autopo.st/images/coverart/r/Roll_Deep_-_Good_Times.jpg", desc: "10S HITS, POSITIVE", isAll: true },
-    { name: "PRO DJ RADIO", stream: "http://live.prodjradio.net:8000/;?type=http&nocache=4585", img: "https://yt3.googleusercontent.com/ytc/AIdro_kzkPgiLvOOACJ8JsiVWcgjbDaDftezak5j9Pv9KAp2cg=s900-c-k-c0x00ffffff-no-rj", desc: "DJ MIX, CLUB, DANCE", isAll: true },
-    { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0e/fe/53/0efe532a-3cee-6c89-1d8d-c9f18284c0f2/mza_5165669991707061934.jpg/1200x1200bf-60.jpg", desc: "RECORD RUSSIAN MIX", isRussian: true, isAll: true },
-    { name: "Маруся ФМ", stream: "https://listen.vdfm.ru:8000/marusya", img: "https://cover.marus.fm/cover/default.jpg", desc: "RUSSIAN POP MIX", isRussian: true, isAll: true },
-    { name: "Европа Плюс", stream: "http://ep256.hostingradio.ru:8052/europaplus256.mp3", img: "https://static2.mytuner.mobi/media/tvos_radios/Fs3ahQV6xT.png", desc: "EUROPE MIX", isRussian: true, isAll: true },
-    { name: "DFM Pop", stream: "https://dfm-popgold10.hostingradio.ru/popgold1096.aacp", img: "https://radiopotok.com/assets/image/radio/180/dfmpopdance.jpg", desc: "POP GOLD, HITS", isRussian: true, isAll: true },
-    { name: "DFM DANCE", stream: "https://dfm-dancegold10.hostingradio.ru/dancegold1096.aacp", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIoi_I2LWM0BpqHgWDPIjwxIF_E3POxwYL4YCBgQrepVIodIXXbv2zvAh4&s=10", desc: "DANCE GOLD, 90S", isRussian: true, isAll: true },
-    
-    // OWNED
-    { name: "Muzică 10s", stream: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://mosaic.scdn.co/640/ab67616d00001e021badc66d1c9de6a98d376946ab67616d00001e022b605014f0cf0ca5e3c46b64ab67616d00001e02baa7a73c40a30e2c780c6841ab67616d00001e02ce26853f4b61f0924446f683", desc: "Sergiu | Childhood", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLmDGw5869lgoRafQq8o6mSt-Z2UWZfMZz&si=wU1Jx3YJLAjZx-8J" },
-    { name: "Emisiuni 10s", stream: "https://sergiumusic.duckdns.org/emisiunivechi", img: "https://play-lh.googleusercontent.com/r6ymNUMhRQN9-V6DS0ZZziAKAZrnJKGEw5mIK4KNFV8XPpD5JBEmlEn2ptSx0RDAEMs", desc: "SERGIU | KISS FM • RADIO 21 • RADIO ZU", isMine: true, isFav: true, isAll: true},
-    { name: "Pop Actual", stream: "https://sergiumusic.duckdns.org/popactual", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRrd73RzhRJNu8IQ94U9TPy4O_hB2qVefaiynqfIk4TfXZ2xdAsvI7ynw&s=10", desc: "Sergiu | POP 20s", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12h2VlBi5lPddOig7Ki-dE2S&si=4StSQYlR4uazgPKO" },
-    { name: "Russian", stream: "https://sergiumusic.duckdns.org/russian", img: "https://play-lh.googleusercontent.com/ImX8wknuPUzGOnAWHRgPJZtd2ehV0Uq37lTTTWov2B9yW6isYJoDn7poSCpyU-J-Uw", desc: "Sergiu | RUS • POP", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12hUgv96dGWDN5_0zqyfwh1t&si=Ezw2KRYTNtJAAKnW" },
-    { name: "Manele", stream: "https://sergiumusic.duckdns.org/manele", img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da842dd25b4dde6d46673b953a6e", desc: "Sergiu | Gypsy Team", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXtIaoNo0wKIH9q_BFCHw4S_&si=XPeFO_NctOno3Vbu" },
-    { name: "Hope", stream: "https://sergiumusic.duckdns.org/hope", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10", desc: "Sergiu | Lovefool Pop", isMine: true, isFav: true, isAll: true, yt: "https://youtube.com/playlist?list=PLYtl-i8aGiXuwf5SEEH9vhwwSci67SNnU&si=NclZd61NGrsZ0UCm" },
-    { name: "Generated Music", stream: "https://sergiumusic.duckdns.org/aimusic", img: "https://i.pinimg.com/236x/fd/fc/82/fdfc82753e4f8cbdd49184e9dea43d06.jpg", desc: "Sergiu | AI POP", isMine: true, isAll: true, yt: "https://youtube.com/playlist?list=PLju_tYPLb12jv_iNgO8ApKgjIO-9NSg85&si=Qs6H1Iogrp47YRuX" }
+    { name: "Muzică 10s", stream: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://i.ibb.co/6R0D9Jg/childhood.jpg", desc: "Sergiu | Childhood", isMine: true, isAll: true },
+    { name: "Hope", stream: "https://sergiumusic.duckdns.org/hope", img: "https://i.ibb.co/VqhK7z5/hope.jpg", desc: "Sergiu | Lovefool Pop", isMine: true, isFav: true, isAll: true },
+    { name: "Emisiuni 10s", stream: "https://sergiumusic.duckdns.org/emisiunivechi", img: "https://i.ibb.co/0f7M6vS/shows.jpg", desc: "Sergiu | Radio Archive", isMine: true, isAll: true },
+    { name: "Radio Record", stream: "https://radiorecord.hostingradio.ru/rus96.aacp", img: "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0e/fe/53/0efe532a-3cee-6c89-1d8d-c9f18284c0f2/mza_5165669991707061934.jpg/1000x1000bb.jpg", desc: "Russian Dance Mix", isRussian: true, isAll: true },
+    { name: "Heart 10s", stream: "https://media-ice.musicradio.com/Heart10sMP3", img: "https://images.weserv.nl/?url=www.globalplayer.com/assets/track-placeholders/heart10s.png", desc: "Classic Hits", isAll: true, isFav: true }
 ];
 
-stations.forEach(s => { s.originalDesc = s.desc; s.originalImg = s.img; s.currentTrack = ""; });
-
+/** --- CORE LOGIC --- **/
 function init() {
-    // 1. Citim query-ul trimis de 404.html (ex: ?man sau ?hope)
-    const urlQuery = window.location.search.substring(1);
-    let autoStartStation = null;
+    renderList('mine', document.getElementById('tab-mine'));
+    document.body.classList.add('app-ready');
+    
+    setTimeout(() => {
+        document.getElementById('main-nav').classList.add('visible');
+        document.getElementById('fab-play-pause').classList.add('visible');
+    }, 500);
 
-    if (urlQuery) {
-        // Decodăm textul (ex: %20 devine spațiu) și îl facem litere mici
-        const targetName = decodeURIComponent(urlQuery).toLowerCase().trim();
-        
-        // Căutare inteligentă: Găsește prima stație care CONȚINE textul scris în URL
-        autoStartStation = stations.find(s => 
-            s.name.toLowerCase().includes(targetName)
-        );
+    lucide.createIcons();
+    setupMediaSession();
+}
 
-        if (autoStartStation) {
-            // Curățăm URL-ul în bara de adrese: 
-            // - Scoatem "/" de la final dacă există
-            // - Adăugăm numele complet al stației găsit
-            // - replace(/\s+/g, '') scoate spațiile pentru un link tip: /m2/heart10s
-            const cleanName = autoStartStation.name.toLowerCase().replace(/\s+/g, '');
-            const cleanPath = window.location.pathname.replace(/\/$/, "") + "/" + cleanName;
-            
-            window.history.replaceState({}, "", cleanPath);
-        }
+function renderList(mode, el) {
+    const list = document.getElementById('stations-list');
+    if (el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
     }
+    
+    list.innerHTML = "";
+    const key = `is${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    currentFilteredList = stations.filter(s => s[key] || mode === 'all');
 
-    // 2. Logică de pornire condiționată
-    if (autoStartStation) {
-        // Dacă am găsit ceva prin URL, forțăm tab-ul 'all' ca să existe în listă
-        renderList('all', document.getElementById('tab-all'));
-        
-        // Găsim indexul stației în lista filtrată curentă
-        currentIdx = currentFilteredList.indexOf(autoStartStation);
-        
-        // Încărcăm stația și activăm Playerul
-        // sp=true (pornește muzica), skipArt=false (arată coperta)
-        loadStationInfo(currentIdx, true, false); 
-        switchTab('player');
-    } else {
-        // PORNIRE NORMALĂ (fără link direct sau dacă căutarea a eșuat)
-        const heart10s = stations.find(s => s.name === "Heart 10s");
-        if (heart10s) {
-            heart10s.isInitialBgSource = true; 
-            fetchSilentMetadata(heart10s); 
-        }
-        
-        // Afișăm lista 'mine' (Owned) implicit
-        renderList('mine', document.getElementById('tab-mine'));
-        
-        // Încărcăm prima stație din listă dar FĂRĂ autoplay (sp=false)
-        loadStationInfo(0, false, true);
-    }
+    currentFilteredList.forEach((s, index) => {
+        const item = document.createElement('div');
+        item.className = `station-item ${activeStationObject?.name === s.name ? 'is-playing' : ''}`;
+        item.setAttribute('data-name', s.name);
+        item.innerHTML = `
+            <img src="${s.img}" class="station-thumb">
+            <div style="flex:1">
+                <div class="station-name">${s.name}</div>
+                <div class="station-desc">${s.desc}</div>
+            </div>
+            <div class="playing-icon"><span></span><span></span><span></span></div>
+        `;
+        item.onclick = () => {
+            currentIdx = index;
+            playStation();
+        };
+        list.appendChild(item);
+    });
+}
 
-    // 3. Inițializare componente vizuale și gesturi
+function playStation() {
+    const s = currentFilteredList[currentIdx];
+    activeStationObject = s;
+    audio.src = s.stream;
+    audio.play();
+    updateArtUI(s.img);
     updateSliderText();
-    setupSwipe();        // Swipe pe copertă/text
-    setupFabSwipe();     // Gesturi pe butonul plutitor
-    scanAllStations();   // Verifică metadatele pentru toate stațiile
-
-    // 4. Engine Audio Listeners (Actualizează butoanele de Play/Pause/Loading)
-    audio.addEventListener('waiting', () => updateUI('loading'));
-    audio.addEventListener('playing', () => updateUI(true));
-    audio.addEventListener('pause', () => updateUI(false));
-    
-    // Gestionare eroare (ex: link de stream mort)
-    audio.addEventListener('error', () => {
-        console.error("Eroare la redarea fluxului audio.");
-        updateUI(false);
-    });
+    updateUI(true);
 }
 
-
-
-
-
-function getStationFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('station'); // caută valoarea după "?station="
+function togglePlay() {
+    if (audio.paused) {
+        if (!audio.src) playStation();
+        else audio.play();
+    } else {
+        audio.pause();
+    }
 }
 
-
-let fabStartX = 0;
-let fabStartY = 0;
-let fabIsDragging = false;
-
-
-function setupFabSwipe() {
+function updateUI(isPlaying) {
+    const btn = document.getElementById('play-trigger');
     const fab = document.getElementById('fab-play-pause');
+    const icon = isPlaying ? 'pause' : 'play';
     
-    fab.addEventListener('touchstart', (e) => {
-        fabStartX = e.touches[0].clientX;
-        fabStartY = e.touches[0].clientY;
-        fabIsDragging = true;
-    }, { passive: true });
-
-    fab.addEventListener('touchend', (e) => {
-        if (!fabIsDragging) return;
-        
-        const diffX = e.changedTouches[0].clientX - fabStartX;
-        const diffY = e.changedTouches[0].clientY - fabStartY;
-        const threshold = 30;
-
-        if (currentFilteredList.length === 0) return;
-
-        // 🔽 JOS → NEXT
-        if (diffY > threshold && Math.abs(diffY) > Math.abs(diffX)) {
-            if (audio.paused && !audio.src) {
-                playStation(); 
-            } else {
-                next();
-            }
-            showFabFeedback('skip-forward');
-        }
-
-        // 🔼 SUS → PREVIOUS
-        else if (diffY < -threshold && Math.abs(diffY) > Math.abs(diffX)) {
-            if (audio.paused && !audio.src) {
-                playStation();
-            } else {
-                prev();
-            }
-            showFabFeedback('skip-back');
-        }
-
-        // ⬅️ STÂNGA → NEXT
-        else if (diffX < -threshold) {
-            if (audio.paused && !audio.src) {
-                playStation();
-            } else {
-                next();
-            }
-            showFabFeedback('skip-forward');
-        }
-        
-        fabIsDragging = false;
+    [btn, fab].forEach(el => {
+        el.innerHTML = `<i data-lucide="${icon}" fill="currentColor"></i>`;
+        isPlaying ? el.classList.add('playing') : el.classList.remove('playing');
     });
+    
+    document.querySelectorAll('.station-item').forEach(item => {
+        item.classList.toggle('is-playing', isPlaying && item.getAttribute('data-name') === activeStationObject?.name);
+    });
+    
+    lucide.createIcons();
 }
 
+function updateArtUI(img) {
+    const art1 = document.getElementById('player-img-1');
+    const art2 = document.getElementById('player-img-2');
+    const bg1 = document.getElementById('bg-layer-1');
+    const bg2 = document.getElementById('bg-layer-2');
 
-
-function showFabFeedback(iconName) {
-    const fab = document.getElementById('fab-play-pause');
-    const iconEl = fab.querySelector('i');
-
-    if (iconEl) {
-        iconEl.setAttribute('data-lucide', iconName);
-        lucide.createIcons();
-        
-        setTimeout(() => {
-            // Revenim la iconița de Play/Pause în funcție de starea reală a sunetului
-            const stateIcon = audio.paused ? 'play' : 'pause';
-            iconEl.setAttribute('data-lucide', stateIcon);
-            lucide.createIcons();
-        }, 800);
-    }
-    if (navigator.vibrate) navigator.vibrate(30);
-}
-
-
-
-
-
-
-
-
-
-
-async function fetchAlbumArt(title, stationRef) {
-    if (!title || title.length < 3) return;
-
-    let fallbackTimeout = null;
-
-    // --- LOGICA TIMEOUT 2 SECUNDE PENTRU HEART 10S ---
-    if (stationRef.isInitialBgSource) {
-        fallbackTimeout = setTimeout(() => {
-            // Dacă au trecut 2 secunde și încă nu avem imagine de la iTunes
-            if (stationRef.img === stationRef.originalImg || !stationRef.img) {
-                console.log("iTunes prea lent, aplicăm logo-ul stației ca fundal.");
-                applyImageToUI(stationRef.originalImg, stationRef, true);
-            }
-        }, 2000); // 2000ms = 2 secunde
-    }
-
-    try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
-        const data = await res.json();
-        
-        if (data.results && data.results.length > 0) {
-            // Dacă iTunes a răspuns, curățăm timeout-ul să nu mai punem logo-ul vechi peste
-            if (fallbackTimeout) clearTimeout(fallbackTimeout);
-
-            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
-            applyImageToUI(newImg, stationRef, false);
-        }
-    } catch (e) {
-        // În caz de eroare (ex: offline), punem direct logo-ul
-        if (stationRef.isInitialBgSource) applyImageToUI(stationRef.originalImg, stationRef, true);
+    if (activeArtLayer === 1) {
+        art2.src = img;
+        art2.classList.replace('art-hidden', 'art-visible');
+        art1.classList.replace('art-visible', 'art-hidden');
+        bg2.style.backgroundImage = `url(${img})`;
+        bg2.style.opacity = "1";
+        bg1.style.opacity = "0";
+        activeArtLayer = 2;
+    } else {
+        art1.src = img;
+        art1.classList.replace('art-hidden', 'art-visible');
+        art2.classList.replace('art-visible', 'art-hidden');
+        bg1.style.backgroundImage = `url(${img})`;
+        bg1.style.opacity = "1";
+        bg2.style.opacity = "0";
+        activeArtLayer = 1;
     }
 }
 
-// Funcție helper pentru a aplica imaginea peste tot unitar
-function applyImageToUI(imgUrl, stationRef, isFallback) {
-    const tempImg = new Image();
-    tempImg.src = imgUrl;
-    tempImg.onload = () => {
-        stationRef.img = imgUrl;
-
-        // 1. Fundalul pentru Heart 10s (Prima pornire)
-        if (stationRef.isInitialBgSource && audio.paused) {
-            const bg1 = document.getElementById('bg-layer-1');
-            bg1.style.backgroundImage = `url(${imgUrl})`;
-            bg1.style.opacity = '1';
-        }
-
-        // 2. Coperta din Player (Dacă e postul activ)
-        if (activeStationObject && activeStationObject.name === stationRef.name) {
-            updateArtUI(imgUrl);
-        }
-        
-        // 3. Miniaturile din listă
-        document.querySelectorAll('.station-item').forEach(item => {
-            if(item.getAttribute('data-name') === stationRef.name) {
-                const thumb = item.querySelector('.station-thumb');
-                if(thumb) thumb.src = imgUrl;
-            }
-        });
-    };
+function switchTab(t) {
+    const isPlayer = t === 'player';
+    document.getElementById('list-view').style.display = isPlayer ? 'none' : 'flex';
+    document.getElementById('player-view').style.display = isPlayer ? 'flex' : 'none';
+    document.getElementById('nav-list').classList.toggle('active', !isPlayer);
+    document.getElementById('nav-player').classList.toggle('active', isPlayer);
+    document.getElementById('fab-play-pause').style.display = isPlayer ? 'none' : 'flex';
 }
 
+function updateSliderText() {
+    const current = currentFilteredList[currentIdx];
+    const prevIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
+    const nextIdx = (currentIdx + 1) % currentFilteredList.length;
 
+    document.getElementById('slide-current').querySelector('h2').innerText = current.name;
+    document.getElementById('slide-current').querySelector('p').innerText = current.desc;
+    document.getElementById('slide-prev').querySelector('h2').innerText = currentFilteredList[prevIdx].name;
+    document.getElementById('slide-next').querySelector('h2').innerText = currentFilteredList[nextIdx].name;
+}
 
+function next() {
+    currentIdx = (currentIdx + 1) % currentFilteredList.length;
+    playStation();
+}
 
+function prev() {
+    currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
+    playStation();
+}
 
-
-
-function updateMediaSession(station) {
+/** --- SYSTEM INTEGRATION --- **/
+function setupMediaSession() {
     if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: station.desc,
-            artist: station.name,
-            album: "Sergiu FM",
-            artwork: [{ src: station.img || FALLBACK_IMG, sizes: '512x512', type: 'image/png' }]
-        });
         navigator.mediaSession.setActionHandler('play', () => audio.play());
         navigator.mediaSession.setActionHandler('pause', () => audio.pause());
         navigator.mediaSession.setActionHandler('previoustrack', () => prev());
@@ -671,497 +398,19 @@ function updateMediaSession(station) {
     }
 }
 
-function renderList(mode, el) {
-    const list = document.getElementById('stations-list');
-    const fab = document.getElementById('fab-play-pause');
-    
-    // 1. Resetăm scroll-ul la 0 (SUS) imediat ce schimbăm categoria
-    // Folosim elementul cu clasa .content deoarece acesta are overflow-y: auto
-    const scrollContainer = document.querySelector('.content');
-    if (scrollContainer) {
-        scrollContainer.scrollTop = 0;
-    }
-
-    // 2. Curățăm lista existentă
-    list.innerHTML = "";
-    
-    // 3. Gestionăm starea vizuală a tab-urilor
-    if(el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-    }
-    
-    // Ne asigurăm că butonul plutitor (FAB) este vizibil în modul listă
-    fab.style.display = 'flex';
-
-    // 4. Filtrăm stațiile pe baza modului selectat
-    currentFilteredList = stations.filter(s => {
-        if (mode === 'all') return s.isAll === true; 
-        if (mode === 'fav') return s.isFav;
-        if (mode === 'russian') return s.isRussian;
-        if (mode === 'mine') return s.isMine;
-        return false;
-    });
-
-    // 5. Generăm elementele în DOM
-    currentFilteredList.forEach((s) => {
-        const item = document.createElement('div');
-        
-        // Verificăm dacă stația curentă este cea care rulează acum pentru a activa egalizatorul
-        const isCurrent = (!audio.paused && activeStationObject && activeStationObject.name === s.name);
-        
-        item.className = `station-item ${isCurrent ? 'is-playing' : ''}`;
-        item.setAttribute('data-name', s.name); 
-        
-        item.innerHTML = `
-            <img src="${s.img || FALLBACK_IMG}" class="station-thumb">
-            <div style="flex:1">
-                <div class="station-name">${s.name}</div>
-                <div class="station-desc">${s.desc}</div>
-            </div>
-            <div class="playing-icon">
-                <span></span><span></span><span></span>
-            </div>
-        `;
-        
-        // La click, setăm indexul și pornim playerul
-        item.onclick = () => { 
-            currentIdx = currentFilteredList.indexOf(s); 
-            playStation(); 
-        };
-        list.appendChild(item);
-    });
-    
-    // 6. Reinițializăm iconițele Lucide și starea UI
+audio.addEventListener('playing', () => updateUI(true));
+audio.addEventListener('pause', () => updateUI(false));
+audio.addEventListener('waiting', () => {
+    document.getElementById('play-trigger').innerHTML = `<i data-lucide="loader-2" class="spin"></i>`;
     lucide.createIcons();
-    updateUI(!audio.paused);
+});
+
+// PWA Service Worker (pentru offline și viteză)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
-
-
-
-
-
-
-
-
-function switchTab(t) {
-    const nav = document.getElementById('main-nav');
-    const fab = document.getElementById('fab-play-pause');
-    
-    if(t === 'list'){ 
-        document.getElementById('list-view').style.display = 'flex'; 
-        document.getElementById('player-view').style.display = 'none';
-        document.getElementById('nav-list').classList.add('active'); 
-        document.getElementById('nav-player').classList.remove('active'); 
-        nav.className = 'nav-bar on-radio';
-        
-        // Afișăm butonul mereu când suntem în modul listă
-        fab.style.display = 'flex';
-        
-    } else { 
-        document.getElementById('list-view').style.display = 'none'; 
-        document.getElementById('player-view').style.display = 'flex';
-        document.getElementById('nav-list').classList.remove('active'); 
-        document.getElementById('nav-player').classList.add('active'); 
-        nav.className = 'nav-bar on-player';
-        
-        // Ascundem FAB doar când intrăm în Player-ul mare
-        fab.style.display = 'none';
-    }
-}
-
-
-
-
-
-function updateUI(state) { 
-    const b = document.getElementById('play-trigger');
-    const f = document.getElementById('fab-play-pause');
-    if(!b && !f) return;
-    
-    let iconPlay = '<i data-lucide="play" fill="currentColor"></i>';
-    let iconPause = '<i data-lucide="pause" fill="currentColor"></i>';
-    let iconLoad = '<i data-lucide="loader-2" class="spin"></i>';
-
-    // 1. Curățăm starea vizuală: eliminăm clasa "is-playing" de pe toate rândurile din listă
-    const allItems = document.querySelectorAll('.station-item');
-    allItems.forEach(item => item.classList.remove('is-playing'));
-
-    // 2. Dacă radio-ul cântă sau se încarcă, activăm egalizatorul doar pe rândul corect
-    if ((state === true || state === 'loading') && typeof activeStationObject !== 'undefined' && activeStationObject) {
-        // Căutăm în DOM rândul care are atributul data-name egal cu numele stației active
-        const activeItem = document.querySelector(`.station-item[data-name="${activeStationObject.name}"]`);
-        if (activeItem) {
-            activeItem.classList.add('is-playing');
-        }
-    }
-
-    // 3. Actualizăm iconițele pentru Butonul din Player și pentru butonul plutitor (FAB)
-    if (state === 'loading') { 
-        if(b) { b.innerHTML = iconLoad; b.classList.remove('playing'); }
-        if(f) { f.innerHTML = iconLoad; f.classList.remove('playing'); }
-    }
-    else if (state === true) { 
-        if(b) { b.innerHTML = iconPause; b.classList.add('playing'); }
-        if(f) { f.innerHTML = iconPause; f.classList.add('playing'); }
-    }
-    else { 
-        if(b) { b.innerHTML = iconPlay; b.classList.remove('playing'); }
-        if(f) { f.innerHTML = iconPlay; f.classList.remove('playing'); }
-    }
-    
-    // 4. Re-randăm iconițele Lucide pentru a afișa noile SVG-uri
-    lucide.createIcons();
-}
-
-
-
-
-
-
-function scanAllStations() { stations.forEach(s => { if (!s.stream.includes('.m3u8')) fetchSilentMetadata(s); }); }
-
-// 1. Modificăm fetchSilentMetadata să asigure afișarea fundalului
-async function fetchSilentMetadata(station) {
-    try {
-        const response = await fetch(station.stream, { headers: { "Icy-MetaData": "1" } });
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let metaInt = parseInt(response.headers.get("icy-metaint"));
-        
-        // Dacă nu avem metadate, punem măcar logo-ul pe fundal la început
-        if (!metaInt && station.isInitialBgSource) {
-            applyImageToUI(station.originalImg, station, true);
-            return;
-        }
-
-        let buffer = new Uint8Array();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            let temp = new Uint8Array(buffer.length + value.length); 
-            temp.set(buffer); temp.set(value, buffer.length); buffer = temp;
-
-            while (buffer.length >= metaInt + 1) {
-                let metaLength = buffer[metaInt] * 16;
-                if (buffer.length < metaInt + 1 + metaLength) break;
-                let metaString = decoder.decode(buffer.slice(metaInt + 1, metaInt + 1 + metaLength));
-                let match = metaString.match(/StreamTitle='([^']*)'/);
-                
-                if (match && match[1]) {
-                    station.desc = match[1].replace(/;/g, "").trim();
-                    // Căutăm coperta pe iTunes
-                    fetchAlbumArt(station.desc, station);
-                    reader.cancel(); 
-                    return;
-                }
-                buffer = buffer.slice(metaInt + 1 + metaLength);
-            }
-        }
-    } catch(e) {
-        // Dacă stream-ul e picat sau eroarea de rețea, punem logo-ul
-        if (station.isInitialBgSource) applyImageToUI(station.originalImg, station, true);
-    }
-}
-
-// 2. Funcția de căutare copertă cu cronometrul de 2 secunde fixat
-async function fetchAlbumArt(title, stationRef) {
-    if (!title || title.length < 3) {
-        if (stationRef.isInitialBgSource) applyImageToUI(stationRef.originalImg, stationRef, true);
-        return;
-    }
-
-    let itunesFinished = false;
-
-    // Timer de 2 secunde: dacă iTunes nu termină, punem logo-ul
-    if (stationRef.isInitialBgSource) {
-        setTimeout(() => {
-            if (!itunesFinished) {
-                console.log("iTunes prea lent, aplicăm logo-ul.");
-                applyImageToUI(stationRef.originalImg, stationRef, true);
-            }
-        }, 2000);
-    }
-
-    try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
-        const data = await res.json();
-        itunesFinished = true; // iTunes a răspuns (chiar și cu 0 rezultate)
-        
-        if (data.results && data.results.length > 0) {
-            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
-            applyImageToUI(newImg, stationRef, false);
-        } else {
-            // iTunes a răspuns dar nu a găsit nimic
-            applyImageToUI(stationRef.originalImg, stationRef, true);
-        }
-    } catch (e) {
-        itunesFinished = true;
-        applyImageToUI(stationRef.originalImg, stationRef, true);
-    }
-}
-
-// 3. Funcția care "aprinde" fundalul (CSS opacity 1)
-function applyImageToUI(imgUrl, stationRef, isFallback) {
-    const bg1 = document.getElementById('bg-layer-1');
-    const playerImg1 = document.getElementById('player-img-1');
-    
-    const tempImg = new Image();
-    tempImg.src = imgUrl;
-    tempImg.onload = () => {
-        stationRef.img = imgUrl;
-
-        // Dacă e Heart 10s la pornire, forțăm fundalul să fie vizibil
-        if (stationRef.isInitialBgSource) {
-            bg1.style.backgroundImage = `url(${imgUrl})`;
-            bg1.style.opacity = "1"; // <--- Aici facem fundalul vizibil
-            if (playerImg1) playerImg1.src = imgUrl;
-        }
-
-        // Dacă stația e cea activă (se ascultă acum)
-        if (activeStationObject && activeStationObject.name === stationRef.name) {
-            updateArtUI(imgUrl);
-        }
-        
-        // Update miniaturi în listă
-        document.querySelectorAll('.station-item').forEach(item => {
-            if(item.getAttribute('data-name') === stationRef.name) {
-                const thumb = item.querySelector('.station-thumb');
-                if(thumb) thumb.src = imgUrl;
-            }
-        });
-    };
-}
-
-
-function updateArtUI(newImg) {
-    const art1 = document.getElementById('player-img-1'); const art2 = document.getElementById('player-img-2');
-    const bg1 = document.getElementById('bg-layer-1'); const bg2 = document.getElementById('bg-layer-2');
-    const nextArt = activeArtLayer === 1 ? art2 : art1; const currentArt = activeArtLayer === 1 ? art1 : art2;
-    const nextBG = activeBGLayer === 1 ? bg2 : bg1; const currentBG = activeBGLayer === 1 ? bg1 : bg2;
-    
-    nextArt.src = newImg; nextBG.style.backgroundImage = `url(${newImg})`;
-    nextArt.classList.replace('art-hidden', 'art-visible'); currentArt.classList.replace('art-visible', 'art-hidden');
-    nextBG.style.opacity = '1'; currentBG.style.opacity = '0';
-    activeArtLayer = activeArtLayer === 1 ? 2 : 1; activeBGLayer = activeBGLayer === 1 ? 2 : 1;
-    updateMediaSession(currentFilteredList[currentIdx]);
-}
-
-async function fetchAlbumArt(title, stationRef) {
-    if (!title || title.length < 3) return;
-    try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
-        const data = await res.json();
-        if (data.results && data.results.length > 0) {
-            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
-            stationRef.img = newImg;
-            if (currentFilteredList[currentIdx] === stationRef) updateArtUI(newImg);
-            const listItems = document.querySelectorAll('.station-item');
-            listItems.forEach(item => {
-                if(item.getAttribute('data-name') === stationRef.name) {
-                    const thumb = item.querySelector('.station-thumb');
-                    const desc = item.querySelector('.station-desc');
-                    thumb.style.opacity = '0';
-                    setTimeout(() => {
-                        thumb.src = newImg;
-                        thumb.style.opacity = '1';
-                        if(desc) desc.innerText = stationRef.desc;
-                    }, 400);
-                }
-            });
-        }
-    } catch (e) {}
-}
-
-function updateUIMetadata(station) {
-    fetchAlbumArt(station.desc, station);
-    if (currentFilteredList[currentIdx] === station) {
-        const slide = document.getElementById('slide-current');
-        if(slide) slide.querySelector('p').innerText = station.desc;
-        updateMediaSession(station);
-    }
-}
-
-async function fetchAlbumArt(title, stationRef) {
-    if (!title || title.length < 3) return;
-
-    let fallbackTimeout = null;
-
-    // DOAR LA PORNIRE: Setăm cronometrul de 2 secunde pentru Heart 10s
-    if (stationRef.isInitialBgSource) {
-        fallbackTimeout = setTimeout(() => {
-            console.log("Prima pornire: iTunes lent. Punem logo Heart 10s.");
-            applyImageToUI(stationRef.originalImg, stationRef, true);
-        }, 2000);
-    }
-
-    try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`);
-        const data = await res.json();
-        
-        if (data.results && data.results.length > 0) {
-            // Dacă iTunes a răspuns, anulăm cronometrul (dacă există)
-            if (fallbackTimeout) clearTimeout(fallbackTimeout);
-
-            const newImg = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
-            applyImageToUI(newImg, stationRef, false);
-        }
-    } catch (e) {
-        // În caz de eroare rețea, forțăm imaginea originală dacă e la pornire
-        if (stationRef.isInitialBgSource) applyImageToUI(stationRef.originalImg, stationRef, true);
-    }
-}
-
-function applyImageToUI(imgUrl, stationRef, isFallback) {
-    const tempImg = new Image();
-    tempImg.src = imgUrl;
-    tempImg.onload = () => {
-        stationRef.img = imgUrl;
-
-        // 1. Gestionare Fundal Inițial (Heart 10s)
-        if (stationRef.isInitialBgSource && audio.paused && (!activeStationObject || !activeStationObject.isPlayingNow)) {
-            const bg1 = document.getElementById('bg-layer-1');
-            bg1.style.backgroundImage = `url(${imgUrl})`;
-            
-            // Forțăm vizibilitatea fluidă
-            setTimeout(() => { bg1.style.opacity = '1'; }, 50);
-            
-            // Dacă am aplicat deja o imagine (fie ea metadata sau fallback), 
-            // marcăm că nu mai avem nevoie de sursa inițială
-            if (!isFallback || imgUrl === stationRef.originalImg) {
-                // Opțional: putem lăsa isInitialBgSource true până la primul Play
-            }
-        }
-
-        // 2. Gestionare Player Activ (Schimbare radio/Play)
-        // Dacă stația care tocmai a primit imaginea este cea selectată în Player
-        if (activeStationObject && activeStationObject.name === stationRef.name) {
-            updateArtUI(imgUrl);
-        }
-        
-        // 3. Update Miniaturi Listă
-        document.querySelectorAll('.station-item').forEach(item => {
-            if(item.getAttribute('data-name') === stationRef.name) {
-                const thumb = item.querySelector('.station-thumb');
-                if(thumb) thumb.src = imgUrl;
-            }
-        });
-    };
-}
-
-
-
-
-function updateSliderText() {
-    if (currentFilteredList.length === 0) return;
-    const pIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length;
-    const nIdx = (currentIdx + 1) % currentFilteredList.length;
-    updateSlide('slide-prev', currentFilteredList[pIdx]);
-    updateSlide('slide-current', currentFilteredList[currentIdx]);
-    updateSlide('slide-next', currentFilteredList[nIdx]);
-}
-
-function updateSlide(id, data) { 
-    const el = document.getElementById(id); 
-    if(!el) return;
-    el.querySelector('h2').innerText = data.name; 
-    el.querySelector('p').innerText = data.desc; 
-}
-
-// În interiorul funcției loadStationInfo(idx, sp = true)
-
-function loadStationInfo(idx, sp = true, skipArt = false) {
-    if (currentFilteredList.length === 0) return;
-    const s = currentFilteredList[idx];
-    
-    // Dezactivăm starea de fundal inițială
-    if (sp) {
-        stations.forEach(st => st.isInitialBgSource = false);
-    }
-
-    activeStationObject = s;
-
-    // Actualizăm interfața (Copertă și Buton YouTube)
-    if (sp || !skipArt) {
-        updateArtUI(s.img || FALLBACK_IMG);
-    }
-
-    const ytBtn = document.getElementById('player-yt-btn');
-    if (s.yt) { 
-        ytBtn.href = s.yt; 
-        ytBtn.classList.remove('yt-hidden'); 
-    } else { 
-        ytBtn.classList.add('yt-hidden'); 
-    }
-
-    // Gestionare Metadate
-    if (metadataInterval) clearInterval(metadataInterval);
-    currentMetadataRequestId++; 
-    
-    audio.src = s.stream;
-
-    setTimeout(() => { 
-        fetchMetadata(s.stream, s); 
-        metadataInterval = setInterval(() => fetchMetadata(s.stream, s), 15000); 
-    }, 3000);
-
-    // Încercare redare cu gestionare eroare Autoplay
-    if(sp) { 
-        updateUI('loading'); 
-        audio.play().catch(error => {
-            console.warn("Autoplay a fost blocat. Utilizatorul trebuie să apese Play manual.");
-            updateUI(false); // Oprește rotirea și arată butonul de Play
-        }); 
-    }
-    
-    updateMediaSession(s);
-}
-
-
-
-
-
-
-function playStation() { updateSliderText(); loadStationInfo(currentIdx, true); switchTab('player'); }
-function next() { currentIdx = (currentIdx + 1) % currentFilteredList.length; animateTransition('next'); }
-function prev() { currentIdx = (currentIdx - 1 + currentFilteredList.length) % currentFilteredList.length; animateTransition('prev'); }
-
-function animateTransition(dir) {
-    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
-    wrapper.style.transform = dir==='next' ? 'translateX(-66.666%)' : 'translateX(0)';
-    setTimeout(()=>{ wrapper.style.transition='none'; loadStationInfo(currentIdx, true); updateSliderText(); wrapper.style.transform = 'translateX(-33.333%)'; }, 600);
-}
-
-function setupSwipe() {
-    const zones = [document.getElementById('swipe-zone-art'), document.getElementById('swipe-zone-text')];
-    zones.forEach(z => {
-        z.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; isDragging=true; wrapper.style.transition='none'; }, {passive: true});
-        z.addEventListener('touchmove', e=>{ if(!isDragging) return; const d = e.touches[0].clientX-startX; wrapper.style.transform = `translateX(calc(-33.333% + ${(d/window.innerWidth)*33}%))`; }, {passive: true});
-        z.addEventListener('touchend', e=>{ 
-            if(!isDragging) return; const d = e.changedTouches[0].clientX - startX;
-            if(d>60) prev(); else if(d<-60) next(); else { wrapper.style.transition = 'transform 0.4s ease'; wrapper.style.transform='translateX(-33.333%)'; }
-            isDragging=false;
-        });
-    });
-}
-
-function togglePlay() { 
-    if (audio.paused) {
-        // Dacă nu cântă nimic, forțăm încărcarea stației curente din listă (cu tot cu artă)
-        // Folosim parametrul false la final pentru skipArt, ca să AFIDEZE coperta
-        loadStationInfo(currentIdx, true, false); 
-    } else {
-        audio.pause(); 
-    }
-}
-
-
-
-
-init();
+window.onload = init;
 </script>
 </body>
 </html>
-
-
