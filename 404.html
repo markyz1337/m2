@@ -1,17 +1,45 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="ro">
+<head>
     <meta charset="utf-8">
-    <title>Sergiu FM</title>
+    <title>Redirecționare Sergiu FM...</title>
+    <style>
+        body { 
+            background: #000; 
+            color: white; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #ff5e3a; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin-right: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
     <script type="text/javascript">
-      // Luăm ultima parte a link-ului (ex: "Hope")
-      var pathSegments = window.location.pathname.split('/');
-      var station = pathSegments[pathSegments.length - 1];
-      
-      // Redirecționăm către index.html și transmitem stația prin URL ascuns
-      window.location.replace(window.location.origin + '/m2/?' + station);
+        // 1. Preluăm calea URL-ului (ex: /hope sau /маруся%20фм)
+        var path = window.location.pathname;
+        
+        // 2. Extragem ultimul segment de după ultimul "/"
+        var segments = path.split('/').filter(function(s) {
+            return s.length > 0;
+        });
+        
+        var station = segments.length > 0 ? segments[segments.length - 1] : "";
+
+        // 3. Redirecționăm către index.html folosind Query String (?)
+        // Acest lucru previne bucla infinită de 404 și îi spune scriptului index.html ce să cânte.
+        if (station) {
+            // Trimitem exact segmentul (va fi decodat și transliterat de init() în index.html)
+            window.location.replace(window.location.origin + '/?' + station);
+        } else {
+            window.location.replace(window.location.origin);
+        }
     </script>
-  </head>
-  <body>
-  </body>
+</head>
+<body>
+    <div class="loader"></div>
+    <p>Se încarcă stația radio...</p>
+</body>
 </html>
