@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sergiu FM</title>
+    <title>Sergiu FM Premium</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,213 +16,231 @@
     <style>
         :root {
             --accent: #ff5e3a;
-            --glass: rgba(255, 255, 255, 0.1);
             --bg-dark: #000000;
+            /* Offset-ul magic: împingem fundul paginii cu 50px sub ecranul fizic */
+            --magic-offset: 55px; 
         }
 
-        /* Reset global și eliminare scroll body */
+        /* Blocăm scroll-ul și forțăm dimensiunea fixă */
         html, body {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: var(--bg-dark);
             font-family: 'Inter', sans-serif;
             overflow: hidden;
-            position: fixed; /* Previne 'bounce' effect pe iOS */
+            position: fixed;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
 
-        /* Containerul principal care ocupă tot ecranul */
-        .app-container {
+        /* Containerul MINCINOS: e mai înalt decât ecranul */
+        .app-over-scan {
             width: 100vw;
-            height: 100dvh; /* Dynamic Viewport Height */
-            position: relative;
+            height: calc(100dvh + var(--magic-offset));
+            position: absolute;
+            top: 0;
+            left: 0;
             display: flex;
             flex-direction: column;
-            z-index: 10;
+            z-index: 1;
         }
 
-        /* FUNDALUL: Acesta ignoră safe-area pentru a umple tot ecranul (fără bară neagră) */
+        /* Fundalul care "curge" sub marginea telefonului */
         .bg-layer {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; /* Acoperă tot, inclusiv offset-ul */
+            background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000');
             background-size: cover;
             background-position: center;
-            filter: blur(40px) brightness(0.35) saturate(1.2);
-            z-index: 1;
-            transition: opacity 1s ease-in-out;
-            background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000');
+            filter: blur(45px) brightness(0.3);
+            z-index: -1;
+            transform: scale(1.1); /* Evităm marginile albe de la blur */
         }
 
-        /* UI LAYER: Acesta respectă zonele sigure pentru butoane */
-        .ui-layer {
-            position: relative;
-            z-index: 2;
-            flex: 1;
+        /* Stratul UI care rămâne aliniat la ecranul vizibil */
+        .ui-visible-area {
+            height: 100dvh;
+            width: 100%;
             display: flex;
             flex-direction: column;
             padding-top: env(safe-area-inset-top);
-            /* Padding jos pentru a ridica elementele deasupra barei de gesturi */
-            padding-bottom: env(safe-area-inset-bottom);
+            position: relative;
         }
 
-        .header-tabs {
-            padding: 20px 20px 10px;
-            display: flex; gap: 10px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            background: var(--glass);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 13px;
+        .header {
+            padding: 25px 20px 10px;
             color: white;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
         }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
 
-        .tab.active { background: var(--accent); border-color: transparent; }
-
-        .content {
+        .content-scroll {
             flex: 1;
             overflow-y: auto;
-            padding: 0 20px;
-            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            padding: 10px 20px 120px; /* Padding mare jos pentru listă */
+            -webkit-overflow-scrolling: touch;
         }
 
-        .station-item {
-            display: flex; align-items: center; padding: 15px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .station-thumb { width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; }
-        .station-name { font-weight: 600; font-size: 16px; color: white; }
-
-        /* Nav-Bar ridicată inteligent deasupra barei de jos a iPhone-ului */
-        .nav-bar {
-            margin: 10px 20px 20px;
-            height: 70px;
-            background: rgba(25, 25, 25, 0.8);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-radius: 35px;
+        .station-card {
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
         }
 
-        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; color: #777; font-size: 11px; gap: 4px; }
-        .nav-link.active { color: white; }
-        .nav-link.active i { color: var(--accent); }
+        .station-img {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            margin-right: 15px;
+            object-fit: cover;
+        }
 
-        .fab {
+        .station-info b { display: block; color: white; font-size: 15px; }
+        .station-info span { color: #888; font-size: 12px; }
+
+        /* Bara de Navigație: Poziționată manual deasupra zonei "moarte" */
+        .custom-nav {
             position: absolute;
-            bottom: calc(env(safe-area-inset-bottom) + 100px);
-            right: 25px;
-            width: 60px; height: 60px;
-            background: white; color: black;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            transition: transform 0.2s active;
+            bottom: 25px; /* Ajustăm să fie perfect deasupra marginii iPhone-ului */
+            left: 20px;
+            right: 20px;
+            height: 70px;
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         }
 
-        .playing-icon { display: flex; gap: 2px; align-items: flex-end; height: 15px; margin-left: 10px; }
-        .playing-icon span { width: 3px; background: var(--accent); animation: bounce 0.5s infinite alternate; }
-        @keyframes bounce { from { height: 4px; } to { height: 15px; } }
+        .nav-item {
+            color: #666;
+            text-align: center;
+            font-size: 10px;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item.active { color: var(--accent); }
+
+        /* Butonul mare de Play (Floating) */
+        .play-master {
+            width: 60px; height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -40px; /* Îl ridicăm puțin din bară */
+            box-shadow: 0 8px 20px rgba(255, 94, 58, 0.3);
+            color: black;
+        }
     </style>
 </head>
 <body>
 
-    <div class="bg-layer" id="bg-visual"></div>
-
-    <div class="app-container">
-        <div class="ui-layer">
-            
-            <div class="header-tabs">
-                <div class="tab active">Radio Live</div>
-                <div class="tab">Favorite</div>
+    <div class="app-over-scan">
+        <div class="bg-layer" id="main-bg"></div>
+        
+        <div class="ui-visible-area">
+            <div class="header">
+                <h1>Sergiu FM</h1>
             </div>
 
-            <div class="content" id="list">
+            <div class="content-scroll" id="station-list">
                 </div>
 
-            <div class="nav-bar">
-                <div class="nav-link active">
+            <div class="custom-nav">
+                <a href="#" class="nav-item active">
                     <i data-lucide="radio"></i><span>Live</span>
+                </a>
+                
+                <div class="play-master" onclick="togglePlay()" id="master-btn">
+                    <i data-lucide="play" fill="black"></i>
                 </div>
-                <div class="nav-link">
-                    <i data-lucide="list-music"></i><span>Playlist</span>
-                </div>
-            </div>
 
-            <div class="fab" id="play-btn" onclick="togglePlay()">
-                <i data-lucide="play" fill="currentColor"></i>
+                <a href="#" class="nav-item">
+                    <i data-lucide="settings"></i><span>Setări</span>
+                </a>
             </div>
-
         </div>
     </div>
 
-    <audio id="audio-engine" crossorigin="anonymous"></audio>
+    <audio id="player" crossorigin="anonymous"></audio>
 
 <script>
+    const audio = document.getElementById('player');
+    const masterBtn = document.getElementById('master-btn');
     const stations = [
-        { name: "Muzică 10s", stream: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://mosaic.scdn.co/640/ab67616d00001e021badc66d1c9de6a98d376946ab67616d00001e022b605014f0cf0ca5e3c46b64ab67616d00001e02baa7a73c40a30e2c780c6841ab67616d00001e02ce26853f4b61f0924446f683" },
-        { name: "Hope FM", stream: "https://sergiumusic.duckdns.org/hope", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8aX5i1Sosu19dYGhKZwB3XHN2aFFLnuPUToBVDQVjOplOdpr5q3ZxEy8&s=10" }
+        { name: "Muzică 10s", url: "https://sergiumusic.duckdns.org/muzicaveche", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200" },
+        { name: "Hope FM", url: "https://sergiumusic.duckdns.org/hope", img: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=200" }
     ];
 
-    const audio = document.getElementById('audio-engine');
-    const bg = document.getElementById('bg-visual');
-    const playBtn = document.getElementById('play-btn');
-    let currentIdx = 0;
-
-    function initList() {
-        const list = document.getElementById('list');
+    function buildList() {
+        const container = document.getElementById('station-list');
         stations.forEach((s, i) => {
-            const item = document.createElement('div');
-            item.className = 'station-item';
-            item.innerHTML = `
-                <img src="${s.img}" class="station-thumb">
-                <div style="flex:1"><div class="station-name">${s.name}</div></div>
+            container.innerHTML += `
+                <div class="station-card" onclick="playStation(${i})">
+                    <img src="${s.img}" class="station-img">
+                    <div class="station-info">
+                        <b>${s.name}</b>
+                        <span>Streaming Online</span>
+                    </div>
+                </div>
             `;
-            item.onclick = () => playStation(i);
-            list.appendChild(item);
         });
     }
 
-    function playStation(idx) {
-        currentIdx = idx;
-        const s = stations[idx];
-        audio.src = s.stream;
+    function playStation(index) {
+        audio.src = stations[index].url;
         audio.play();
-        bg.style.backgroundImage = `url(${s.img})`;
-        updateUI(true);
+        document.getElementById('main-bg').style.backgroundImage = `url(${stations[index].img})`;
+        updateBtn(true);
     }
 
     function togglePlay() {
         if (audio.paused) {
             if (!audio.src) playStation(0);
             else audio.play();
-            updateUI(true);
+            updateBtn(true);
         } else {
             audio.pause();
-            updateUI(false);
+            updateBtn(false);
         }
     }
 
-    function updateUI(playing) {
-        playBtn.innerHTML = `<i data-lucide="${playing ? 'pause' : 'play'}" fill="currentColor"></i>`;
+    function updateBtn(isPlaying) {
+        masterBtn.innerHTML = `<i data-lucide="${isPlaying ? 'pause' : 'play'}" fill="black"></i>`;
         lucide.createIcons();
     }
 
-    // Inregistrare Service Worker (PWA)
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-    }
-
+    // Inițializare
     lucide.createIcons();
-    initList();
+    buildList();
+
+    // Blocare scroll elastic pe iOS (PWA fix)
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.content-scroll')) return;
+        e.preventDefault();
+    }, { passive: false });
+
 </script>
 </body>
 </html>
