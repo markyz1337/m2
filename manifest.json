@@ -1,19 +1,19 @@
 {
   "name": "Sergiu FM",
-  "short_name": "Sergiu FM",
-  "start_url": "index.html",
+  "short_name": "SergiuFM",
+  "description": "Radio Player Premium",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff5e3a",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-180.png",
-      "sizes": "192x192",
+      "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "icon-180.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
