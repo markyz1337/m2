@@ -245,11 +245,19 @@ body {
 }
 
 .app-container {
-    width: 100%; max-width:385px; height: 100.1%; position: relative;
-    display: flex; flex-direction: column;
+    width: 100%;
+    max-width: 385px;
+    /* Folosim min-height pentru a garanta cei 100.1% mereu */
+    height: 100svh; 
+    min-height: 100.1svh; 
+    position: relative;
+    display: flex;
+    flex-direction: column;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    transition: opacity 0.3s ease-in;
 }
+
 
 .bg-blur {
     position: absolute; 
