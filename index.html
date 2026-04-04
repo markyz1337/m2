@@ -57,46 +57,56 @@
     color: rgba(255,255,255,0.5);
 }
 
-/* Fix pentru a vedea ce scrii pe iPhone */
-.search-input {
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-
-
-/* Stiluri pentru Search Bar */
+/* Stiluri pentru Search Bar - MODIFICAT PENTRU FIX KEYBOARD */
 .search-container {
-    position: absolute;
-    bottom: 115px;
-    left: 31px; /* Simetric cu FAB-ul din dreapta */
-    z-index: 15;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; /* Schimbat de la 0 la 100% */
+    z-index: 100;
     display: flex;
-    align-items: center;
-    pointer-events: none; /* Previne blocarea listei când e ascuns */
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: env(safe-area-inset-top);
+    pointer-events: none; /* Containerul e transparent pentru click-uri... */
+    transition: background 0.4s ease;
 }
+
+.btn-search-trigger {
+    /* ... restul stilurilor tale ... */
+    pointer-events: auto; /* ... dar BUTONUL trebuie să fie mereu clickabil! */
+    z-index: 102;
+}
+
+.search-active.search-container {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    pointer-events: auto; /* Când e activ, tot ecranul prinde click-uri pentru a închide */
+}
+
 
 .search-input-wrapper {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(40, 40, 40, 0.95);
     border-radius: 30px;
-    width: 0;
+    width: 90%;
+    max-width: 350px;
     height: 56px;
-    overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    margin-top: 20px; /* Poziționat sus pentru a nu fi împins de tastatură */
     display: flex;
     align-items: center;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
     opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s ease;
+    padding: 0 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .search-active .search-input-wrapper {
-    width: 260px; /* Se extinde peste listă */
     opacity: 1;
-    pointer-events: auto;
-    padding-left: 55px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transform: translateY(0);
 }
 
 .search-input {
@@ -104,14 +114,14 @@
     border: none;
     outline: none;
     color: white;
-    font-size: 16px;
+    font-size: 18px; /* 18px previne auto-zoom pe iOS */
     width: 100%;
-    padding-right: 20px;
 }
 
 .btn-search-trigger {
-    position: absolute;
-    left: 0;
+    position: fixed;
+    bottom: 115px;
+    left: 31px;
     width: 56px;
     height: 56px;
     background: #fff;
@@ -122,14 +132,16 @@
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    z-index: 101;
     transition: all 0.4s ease;
-    pointer-events: auto;
 }
 
 .search-active .btn-search-trigger {
     background: var(--accent);
     color: white;
+    transform: rotate(45deg); /* Se transformă în "X" simbolic */
 }
+
 
 
 
@@ -187,7 +199,16 @@
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
 
-
+body { 
+    background: var(--bg-dark); 
+    color: white; 
+    height: 100dvh; 
+    width: 100vw;
+    overflow: hidden;
+    display: flex; 
+    justify-content: center;
+    touch-action: pan-y;
+}
 
 .player-yt-link {
     position: absolute;
@@ -223,6 +244,13 @@
     transform: scale(0.7);
 }
 
+.app-container {
+    width: 100%; max-width:385px; height: 100.1%; position: relative;
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
 .bg-blur {
     position: absolute; 
     top: -10%; left: -10%; width: 120%; height: 120%;
@@ -256,44 +284,15 @@
 .tab.active { background: var(--accent); border-color: transparent; font-weight: 900; }
 .tab:active { transform: scale(0.95); }
 
-
-
-/* 1. Forțează HTML și Body să nu se miște deloc */
-html, body {
-    position: fixed; /* Blochează fundalul pe loc */
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    /* Elimină spațiile elastice pe iOS */
-    -webkit-overflow-scrolling: touch;
-    touch-action: none;
+.content { 
+    position: relative; 
+    z-index: 10; 
+    flex: 1; 
+    padding: 0 20px 140px 20px; 
+    overflow-y: auto; 
+    overscroll-behavior-y: contain; 
+    -webkit-overflow-scrolling: touch; 
 }
-
-/* 2. Corectează containerul aplicației */
-.app-container {
-    width: 100%; 
-    max-width: 385px; 
-    height: 100dvh; /* Folosește Dynamic Viewport Height */
-    position: fixed; /* Schimbă din relative în fixed */
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%); /* Centrare perfectă */
-    display: flex; 
-    flex-direction: column;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* 3. Asigură-te că lista are scroll-ul ei separat */
-.content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y; /* Permite doar scroll vertical */
-}
-
-
-
 
 .station-item { 
     display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
@@ -615,28 +614,24 @@ function toggleSearch() {
     const container = document.getElementById('search-box');
     const input = document.getElementById('radio-search-input');
     
-    if (!container || !input) return;
-
     isSearchOpen = !isSearchOpen;
-    container.classList.toggle('search-active', isSearchOpen);
     
     if (isSearchOpen) {
-        setTimeout(() => input.focus(), 300); // Focus după animație
-        renderList('all', document.getElementById('tab-all'));
+        container.classList.add('search-active');
+        // Focus rapid pentru a ridica tastatura pe mobil
+        setTimeout(() => {
+            input.focus();
+        }, 100);
     } else {
+        container.classList.remove('search-active');
         input.value = "";
         input.blur(); 
-        
-        // Resetăm lista la "Owned" sau "All" când închidem
+        // Resetăm lista la categoria 'Owned' când închidem căutarea
         renderList('mine', document.getElementById('tab-mine'));
-
-        // FIX: Readucem interfața jos
-        setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-        }, 100);
     }
 }
+
+
 
 
 
