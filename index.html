@@ -623,21 +623,27 @@ function toggleSearch() {
     const input = document.getElementById('radio-search-input');
     
     isSearchOpen = !isSearchOpen;
+    container.classList.toggle('search-active', isSearchOpen);
     
     if (isSearchOpen) {
-        container.classList.add('search-active');
-        // Focus rapid pentru a ridica tastatura pe mobil
-        setTimeout(() => {
-            input.focus();
-        }, 100);
+        setTimeout(() => input.focus(), 400);
     } else {
-        container.classList.remove('search-active');
         input.value = "";
         input.blur(); 
-        // Resetăm lista la categoria 'Owned' când închidem căutarea
+
+        // FORȚĂM RESETAREA ÎNĂLȚIMII
+        setTimeout(() => {
+            // Această linie forțează browserul să re-evalueze înălțimea containerului
+            document.querySelector('.app-container').style.height = '100.1svh';
+            
+            // Eliminăm scroll-ul rezidual lăsat de tastatură pe iOS
+            window.scrollTo(0, 0);
+        }, 300); // 300ms este timpul aproximativ în care tastatura iOS dispare complet
+
         renderList('mine', document.getElementById('tab-mine'));
     }
 }
+
 
 
 
