@@ -595,24 +595,23 @@ function toggleSearch() {
     container.classList.toggle('search-active', isSearchOpen);
     
     if (isSearchOpen) {
-        input.focus();
-        const tabAll = document.getElementById('tab-all');
-        if (tabAll) renderList('all', tabAll);
+        setTimeout(() => input.focus(), 300); // Focus după animație
+        renderList('all', document.getElementById('tab-all'));
     } else {
         input.value = "";
-        input.blur(); // Închide tastatura forțat
+        input.blur(); 
         
-        // FIX: Forțează fereastra să revină la poziția inițială
-        setTimeout(() => {
-            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-            // Re-verificăm înălțimea pentru a corecta glitch-ul vizual
-            document.documentElement.style.height = '100dvh';
-            document.body.style.height = '100dvh';
-        }, 100);
+        // Resetăm lista la "Owned" sau "All" când închidem
+        renderList('mine', document.getElementById('tab-mine'));
 
-        renderList('all', document.getElementById('tab-all'));
+        // FIX: Readucem interfața jos
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+        }, 100);
     }
 }
+
 
 
 
@@ -1541,7 +1540,53 @@ function updateStationUI(name, desc) {
 async function init() {
     const navBar = document.getElementById('main-nav');
     const fab = document.getElementById('fab-play-pause');
+    const searchInput = document.getElementById('radio-search-input');
 
+    // 1. ACTIVEAZĂ ASCULTAREA TASTATURII PENTRU CĂUTARE
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            clearTimeout(searchTimeout); // Previne apelurile prea dese la API
+            
+            // Dacă ștergi tot, revine la lista de bază (Owned)
+            if (query.length === 0) {
+                renderList('mine', document.getElementById('tab-mine'));
+                return;
+            }
+            
+            // Caută doar dacă avem cel puțin 2 caractere
+            if (query.length < 2) return;
+
+            searchTimeout = setTimeout(() => {
+                searchExternalRadios(query);
+            }, 500); 
+        });
+
+        // Previne trimiterea formularului la Enter
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                searchInput.blur();
+            }
+        });
+    }
+
+    // 2. REZOLVĂ BUG-UL DE LAYOUT (INTERFAȚA RIDICATĂ PE MOBILE)
+    document.addEventListener('focusout', (e) => {
+        if (e.target.tagName === 'INPUT') {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+                document.body.scrollTop = 0;
+                
+                const appContainer = document.querySelector('.app-container');
+                if (appContainer) {
+                    appContainer.style.height = '100dvh';
+                    appContainer.style.top = '0';
+                }
+            }, 50);
+        }
+    });
+
+    // 3. LOGICA DE PORNIRE (URL PARSING & AUTO-PLAY)
     const queryString = window.location.search.substring(1); 
     const pathSegments = window.location.pathname.split('/').filter(s => s.length > 0);
     const lastPathSegment = pathSegments.pop();
@@ -1556,7 +1601,7 @@ async function init() {
         });
     }
 
-    // 1. PUNEM FUNDALUL RANDOM ÎNTÂI
+    // Punem fundalul random la start
     await applyRandomItunesCover();
 
     if (autoFound) {
@@ -1570,13 +1615,12 @@ async function init() {
         if (currentIdx === -1) currentIdx = 0;
 
         switchTab('player');
-        // Aici lăsăm isInitial false pentru că userul a venit pe un link specific, vrea imaginea postului
         loadStationInfo(currentIdx, true, false, false);
     } else {
         renderList('mine', document.getElementById('tab-mine'));
         currentIdx = 0;
         
-        // 2. PORNIRE SILENȚIOASĂ (Păstrează fundalul random)
+        // Pornire silențioasă (păstrează fundalul random)
         loadStationInfo(currentIdx, true, false, true); 
         
         if (ENABLE_DIRECT_LINKS) {
@@ -1584,26 +1628,7 @@ async function init() {
         }
     }
 
-   // Rezolvă bug-ul de layout după închiderea tastaturii pe mobile
-document.addEventListener('focusout', (e) => {
-    if (e.target.tagName === 'INPUT') {
-        setTimeout(() => {
-            // "Scutură" layout-ul pentru a forța redesenarea corectă
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            
-            // Re-aliniem containerul principal dacă a rămas decalat
-            const appContainer = document.querySelector('.app-container');
-            if (appContainer) {
-                appContainer.style.height = '100%';
-                appContainer.style.top = '0';
-            }
-        }, 50);
-    }
-});
-
-
-
+    // 4. AFIȘARE UI ȘI ANIMAȚII
     document.body.classList.add('app-ready');
 
     setTimeout(() => {
@@ -1614,17 +1639,20 @@ document.addEventListener('focusout', (e) => {
         }
     }, 400);
 
+    // 5. SETUP EVENIMENTE ȘI INTERVALE
     updateSliderText();
     setupSwipe();
     setupFabSwipe();
     await updateAllOwnedStations(); 
 
+    // Metadata Sync inițial pentru toate posturile
     stations.forEach((s, i) => {
         if (!s.stream.includes("sergiumusic.duckdns.org")) {
             setTimeout(() => fetchMetadata(s.stream, s), i * 150);
         }
     });
 
+    // Interval de refresh metadata (20 secunde)
     setInterval(() => {
         updateAllOwnedStations();
         stations.forEach((s, i) => {
@@ -1634,10 +1662,12 @@ document.addEventListener('focusout', (e) => {
         });
     }, 20000);
 
+    // Listeners pentru motorul audio
     audio.addEventListener('waiting', () => updateUI('loading'));
     audio.addEventListener('playing', () => updateUI(true));
     audio.addEventListener('pause', () => updateUI(false));
 }
+
 
 
 
