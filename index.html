@@ -589,43 +589,31 @@ function toggleSearch() {
     const container = document.getElementById('search-box');
     const input = document.getElementById('radio-search-input');
     
-    if (!container || !input) return; // Siguranță să nu dea eroare dacă lipsesc ID-urile
+    if (!container || !input) return;
 
     isSearchOpen = !isSearchOpen;
     container.classList.toggle('search-active', isSearchOpen);
     
     if (isSearchOpen) {
         input.focus();
-        // Forțăm tab-ul ALL pentru context
         const tabAll = document.getElementById('tab-all');
         if (tabAll) renderList('all', tabAll);
     } else {
         input.value = "";
+        input.blur(); // Închide tastatura forțat
+        
+        // FIX: Forțează fereastra să revină la poziția inițială
+        setTimeout(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+            // Re-verificăm înălțimea pentru a corecta glitch-ul vizual
+            document.documentElement.style.height = '100dvh';
+            document.body.style.height = '100dvh';
+        }, 100);
+
         renderList('all', document.getElementById('tab-all'));
     }
 }
 
-// Pune acest cod chiar înainte de init()
-document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('radio-search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim();
-            clearTimeout(searchTimeout);
-            
-            if (query.length === 0) {
-                renderList('all', document.getElementById('tab-all'));
-                return;
-            }
-            
-            if (query.length < 3) return;
-
-            searchTimeout = setTimeout(() => {
-                searchExternalRadios(query);
-            }, 500);
-        });
-    }
-});
 
 
 
@@ -633,48 +621,54 @@ document.addEventListener('DOMContentLoaded', () => {
 async function searchExternalRadios(query) {
     const listContainer = document.getElementById('stations-list');
     
-    // Încercăm mai multe servere din rețeaua Radio Browser pentru redundanță
-    const servers = [
+    // Lista de servere de rezervă (Mirror-uri)
+    const apiServers = [
         'de1.api.radio-browser.info',
         'at1.api.radio-browser.info',
-        'fr1.api.radio-browser.info'
+        'nl1.api.radio-browser.info'
     ];
-    
+
     let results = [];
     let success = false;
 
-    for (let server of servers) {
+    // Încercăm fiecare server până când unul răspunde
+    for (let server of apiServers) {
         if (success) break;
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // Timeout după 3 secunde
+
             const response = await fetch(`https://${server}/json/stations/byname/${encodeURIComponent(query)}?limit=25`, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
+                signal: controller.signal
             });
-            
+
             if (response.ok) {
                 results = await response.json();
                 success = true;
+                console.log(`Succes folosind serverul: ${server}`);
             }
         } catch (e) {
-            console.warn(`Serverul ${server} a eșuat, încercăm următorul...`);
+            console.warn(`Serverul ${server} nu a răspuns, încercăm următorul...`);
         }
     }
 
-    // Dacă toate au eșuat (CORS block), folosim un proxy public ca ultimă soluție
+    // DACĂ TOTUL EȘUEAZĂ (CORS block), folosim Proxy-ul ca ultimă soluție
     if (!success) {
         try {
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://de1.api.radio-browser.info/json/stations/byname/${query}?limit=20`)}`;
             const res = await fetch(proxyUrl);
             const data = await res.json();
             results = JSON.parse(data.contents);
+            success = true;
         } catch (err) {
-            listContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Eroare de conexiune la baza de date globală.</div>`;
+            listContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#ff5e3a;">Eroare critică de conexiune. Reîncearcă.</div>`;
             return;
         }
     }
 
-    if (!results || results.length === 0) {
-        listContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Nu s-a găsit niciun radio pentru "${query}".</div>`;
+    // Afișarea rezultatelor
+    if (results.length === 0) {
+        listContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Nu am găsit nimic pentru "${query}".</div>`;
         return;
     }
 
@@ -682,7 +676,7 @@ async function searchExternalRadios(query) {
         name: r.name.substring(0, 35),
         stream: r.url_resolved || r.url,
         img: (r.favicon && r.favicon.startsWith('http')) ? r.favicon : "https://cdn-icons-png.flaticon.com/512/3208/3208126.png",
-        desc: `${r.countrycode || 'Global'} • ${r.tags ? r.tags.split(',')[0].toUpperCase() : 'RADIO'}`,
+        desc: `${r.countrycode || 'WW'} • ${r.tags ? r.tags.split(',')[0].toUpperCase() : 'RADIO'}`,
         isAll: true,
         isExternal: true
     }));
@@ -690,6 +684,7 @@ async function searchExternalRadios(query) {
     currentFilteredList = mappedResults;
     renderCustomList(currentFilteredList);
 }
+
 
 
 
@@ -1588,6 +1583,26 @@ async function init() {
             window.history.replaceState({}, "", "/");
         }
     }
+
+   // Rezolvă bug-ul de layout după închiderea tastaturii pe mobile
+document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT') {
+        setTimeout(() => {
+            // "Scutură" layout-ul pentru a forța redesenarea corectă
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            
+            // Re-aliniem containerul principal dacă a rămas decalat
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.height = '100%';
+                appContainer.style.top = '0';
+            }
+        }, 50);
+    }
+});
+
+
 
     document.body.classList.add('app-ready');
 
