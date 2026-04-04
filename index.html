@@ -49,6 +49,19 @@
     transition: opacity 0.5s ease-in-out;
 }
 
+.station-item[data-name] {
+    transition: background 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+/* Fix pentru a vedea ce scrii pe iPhone */
+.search-input {
+    -webkit-appearance: none;
+    appearance: none;
+}
 
 
 
@@ -174,16 +187,7 @@
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
 
-body { 
-    background: var(--bg-dark); 
-    color: white; 
-    height: 100dvh; 
-    width: 100vw;
-    overflow: hidden;
-    display: flex; 
-    justify-content: center;
-    touch-action: pan-y;
-}
+
 
 .player-yt-link {
     position: absolute;
@@ -219,13 +223,6 @@ body {
     transform: scale(0.7);
 }
 
-.app-container {
-    width: 100%; max-width:385px; height: 100.1%; position: relative;
-    display: flex; flex-direction: column;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
 .bg-blur {
     position: absolute; 
     top: -10%; left: -10%; width: 120%; height: 120%;
@@ -259,15 +256,44 @@ body {
 .tab.active { background: var(--accent); border-color: transparent; font-weight: 900; }
 .tab:active { transform: scale(0.95); }
 
-.content { 
-    position: relative; 
-    z-index: 10; 
-    flex: 1; 
-    padding: 0 20px 140px 20px; 
-    overflow-y: auto; 
-    overscroll-behavior-y: contain; 
-    -webkit-overflow-scrolling: touch; 
+
+
+/* 1. Forțează HTML și Body să nu se miște deloc */
+html, body {
+    position: fixed; /* Blochează fundalul pe loc */
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    /* Elimină spațiile elastice pe iOS */
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
 }
+
+/* 2. Corectează containerul aplicației */
+.app-container {
+    width: 100%; 
+    max-width: 385px; 
+    height: 100dvh; /* Folosește Dynamic Viewport Height */
+    position: fixed; /* Schimbă din relative în fixed */
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%); /* Centrare perfectă */
+    display: flex; 
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 3. Asigură-te că lista are scroll-ul ei separat */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y; /* Permite doar scroll vertical */
+}
+
+
+
 
 .station-item { 
     display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid transparent;
