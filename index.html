@@ -448,6 +448,23 @@ body {
         </div>
     </div>
 
+<div id="search-modal" class="search-modal">
+    <div class="search-glass-card">
+        <div class="search-header">
+            <h3>Explore Radio</h3>
+            <button onclick="closeSearch()" class="btn-close-modal"><i data-lucide="x"></i></button>
+        </div>
+        <div class="search-input-wrapper">
+            <input type="text" id="search-field" placeholder="Căută post sau gen..." autocomplete="off">
+            <button id="search-go-btn" onclick="executeSearch()"><i data-lucide="search"></i></button>
+        </div>
+        <p class="search-hint">Rezultatele vor apărea în tab-ul <b>All</b></p>
+    </div>
+</div>
+
+
+
+
     <div class="nav-bar on-radio" id="main-nav">
 <div class="nav-link" id="nav-player" onclick="switchTab('player')">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-circle"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
