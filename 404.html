@@ -17,26 +17,36 @@
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #ff5e3a; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin-right: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
-    <script type="text/javascript">
-        // 1. Preluăm calea URL-ului (ex: /hope sau /маруся%20фм)
-        var path = window.location.pathname;
-        
-        // 2. Extragem ultimul segment de după ultimul "/"
-        var segments = path.split('/').filter(function(s) {
-            return s.length > 0;
-        });
-        
-        var station = segments.length > 0 ? segments[segments.length - 1] : "";
+<script type="text/javascript">
+    // 1. Preluăm întreaga cale a URL-ului
+    var path = window.location.pathname; // ex: "/url/https://live.onefm.ro/onefm.aacp"
 
-        // 3. Redirecționăm către index.html folosind Query String (?)
-        // Acest lucru previne bucla infinită de 404 și îi spune scriptului index.html ce să cânte.
+    // 2. Verificăm dacă link-ul începe cu "/url/"
+    if (path.indexOf('/url/') !== -1) {
+        // Extragem TOT ce urmează după "/url/"
+        // split('/url/')[1] va lua restul adresei exact așa cum este
+        var fullStream = path.split('/url/')[1];
+
+        if (fullStream) {
+            // Redirecționăm către index.html trimițând stream-ul ca parametru
+            // Folosim encodeURIComponent pentru a fi siguri că caracterele speciale nu strică link-ul
+            window.location.replace(window.location.origin + '/?' + encodeURIComponent(fullStream));
+        } else {
+            window.location.replace(window.location.origin);
+        }
+    } 
+    // 3. Fallback pentru link-uri simple (ex: /hope)
+    else {
+        var segments = path.split('/').filter(function(s) { return s.length > 0; });
+        var station = segments.length > 0 ? segments[segments.length - 1] : "";
+        
         if (station) {
-            // Trimitem exact segmentul (va fi decodat și transliterat de init() în index.html)
             window.location.replace(window.location.origin + '/?' + station);
         } else {
             window.location.replace(window.location.origin);
         }
-    </script>
+    }
+</script>
 </head>
 <body>
     <div class="loader"></div>
