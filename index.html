@@ -45,6 +45,111 @@
 }
 
 
+.search-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 1000;
+    display: none; /* Ascuns implicit */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.search-modal.active {
+    display: flex;
+    opacity: 1;
+}
+
+.search-glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 35px;
+    padding: 30px;
+    width: 100%;
+    max-width: 340px;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+.search-modal.active .search-glass-card {
+    transform: scale(1) translateY(0);
+}
+
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.search-header h3 { font-weight: 600; font-size: 20px; letter-spacing: -0.5px; }
+
+.btn-close-modal {
+    background: rgba(255,255,255,0.1);
+    border: none; color: white;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    gap: 10px;
+}
+
+#search-field {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 15px 05px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.3s ease;
+}
+
+#search-field:focus { border-color: var(--accent); }
+
+#search-go-btn {
+    background: var(--accent);
+    border: none; 
+    color: white;
+    width: 80px; /* Am mărit de la 52px la 80px */
+    border-radius: 50px; /* Rotunjit la fel ca input-ul */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.3s ease;
+}
+
+#search-go-btn:active {
+    transform: scale(0.9); /* Efect de apăsare (liquid) */
+    background: #ff7e61; /* Culoare puțin mai deschisă la apăsare */
+}
+
+/* Ajustăm și iconița din interior să fie puțin mai mare */
+#search-go-btn i {
+    width: 22px;
+    height: 22px;
+}
+
+
+.search-hint {
+    margin-top: 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
 
 
@@ -447,24 +552,6 @@ body {
             <div class="btn-round" id="btn-next" onclick="next()"><i data-lucide="skip-forward" fill="currentColor"></i></div>
         </div>
     </div>
-
-<div id="search-modal" class="search-modal">
-    <div class="search-glass-card">
-        <div class="search-header">
-            <h3>Explore Radio</h3>
-            <button onclick="closeSearch()" class="btn-close-modal"><i data-lucide="x"></i></button>
-        </div>
-        <div class="search-input-wrapper">
-            <input type="text" id="search-field" placeholder="Căută post sau gen..." autocomplete="off">
-            <button id="search-go-btn" onclick="executeSearch()"><i data-lucide="search"></i></button>
-        </div>
-        <p class="search-hint">Rezultatele vor apărea în tab-ul <b>All</b></p>
-    </div>
-</div>
-
-
-
-
     <div class="nav-bar on-radio" id="main-nav">
 <div class="nav-link" id="nav-player" onclick="switchTab('player')">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-circle"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
@@ -588,57 +675,79 @@ function getOptimizedImg(url) {
 
 
 
-async function openSearch() {
-    const query = prompt("Caută post de radio (Radio-Browser):");
-    if (!query || query.length < 2) return;
+// Deshide Pop-up-ul
+function openSearch() {
+    const modal = document.getElementById('search-modal');
+    modal.classList.add('active');
+    document.getElementById('search-field').focus();
+    lucide.createIcons();
+}
 
-    const searchBtn = document.getElementById('fab-search');
-    const originalIcon = searchBtn.innerHTML;
-    searchBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
+// Închide Pop-up-ul
+function closeSearch() {
+    document.getElementById('search-modal').classList.remove('active');
+}
+
+// Execută căutarea propriu-zisă
+async function executeSearch() {
+    const input = document.getElementById('search-field');
+    const query = input.value.trim();
+    const btn = document.getElementById('search-go-btn');
+
+    if (query.length < 2) return;
+
+    // Loading State pe buton
+    const originalIcon = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
     lucide.createIcons();
 
     try {
-        // Folosim un Mirror stabil pentru API
         const response = await fetch(`https://de1.api.radio-browser.info/json/stations/byname/${encodeURIComponent(query)}?limit=40`);
         const results = await response.json();
 
         if (results.length === 0) {
-            alert("Niciun rezultat găsit.");
+            alert("Niciun rezultat.");
         } else {
-            // Mapăm rezultatele și CURĂȚĂM titlurile lungi
             const newStations = results.map(r => {
-                // Curățăm numele: eliminăm extensiile inutile și limităm lungimea
                 let cleanName = r.name.split('[')[0].split('(')[0].trim();
                 if (cleanName.length > 28) cleanName = cleanName.substring(0, 25) + "...";
-
                 return {
                     name: cleanName,
                     stream: r.url_resolved,
                     img: (r.favicon && r.favicon.startsWith('http')) ? r.favicon : FALLBACK_IMG,
-                    desc: (r.tags || "International Radio").split(',')[0].toUpperCase(),
-                    isAll: true,
-                    isSearch: true
+                    desc: (r.tags || "International").split(',')[0].toUpperCase(),
+                    isAll: true
                 };
             });
 
             currentFilteredList = newStations;
             currentIdx = 0;
             
-            // Randăm noua listă cu egalizator inclus
+            // Randăm rezultatele în tab-ul "All"
             renderSearchResults(newStations);
             
-            // Setăm vizual tab-ul All ca activ
+            // Activăm vizual tab-ul All
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-all').classList.add('active');
+            
+            // Închidem modalul după succes
+            closeSearch();
+            input.value = ""; // Resetăm input-ul
         }
-    } catch (error) {
-        console.error("Search error:", error);
+    } catch (e) {
+        console.error(e);
         alert("Eroare la conexiune.");
     } finally {
-        searchBtn.innerHTML = originalIcon;
+        btn.innerHTML = originalIcon;
         lucide.createIcons();
     }
 }
+
+// Permite căutarea la apăsarea tastei ENTER
+document.getElementById('search-field')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') executeSearch();
+});
+
 
 
 
@@ -1596,5 +1705,20 @@ async function init() {
 
 init();
 </script>
+
+<div id="search-modal" class="search-modal">
+    <div class="search-glass-card">
+        <div class="search-header">
+            <h3>Explore Radio</h3>
+            <button onclick="closeSearch()" class="btn-close-modal"><i data-lucide="x"></i></button>
+        </div>
+        <div class="search-input-wrapper">
+            <input type="text" id="search-field" placeholder="Caută post sau gen..." autocomplete="off">
+            <button id="search-go-btn" onclick="executeSearch()"><i data-lucide="search"></i></button>
+        </div>
+        <p class="search-hint">Rezultatele vor apărea în tab-ul <b>All</b></p>
+    </div>
+</div>
+
 </body>
 </html>
