@@ -334,39 +334,50 @@ body {
 
 
 
-/* Obiectul aplicației - Dimensiuni fixe 9:16 */
+/* Modificări la Containerul Telefonului */
 .app-container {
-    width: 415px; 
+    width: 395px; 
     height: 750px; 
     position: relative;
+    z-index: 10; /* Stă deasupra aurei */
     display: flex; 
     flex-direction: column;
-    background: #000;
-    border-radius: 40px; 
-    border: 0px solid #1a1a1a;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    overflow: hidden;
     
-    /* Asigurăm scalarea din centrul obiectului */
+    /* Fundal semi-transparent cu blur intern (Glassmorphism) */
+    background: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    border-radius: 40px; 
+    border: 7px solid #1a1a1a;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    overflow: hidden; /* Conținutul listelor rămâne tăiat corect de ramă */
+    
     transform-origin: center center;
     flex-shrink: 0;
-    
-    /* Smoothness pentru redimensionare */
     will-change: transform;
-    backface-visibility: hidden;
 }
 
 
-/* Ajustăm fundalul blurat să stea în interiorul containerului fix */
+
+/* Stilul pentru Aura (Fundalul din spatele ramei) */
 .bg-blur {
     position: absolute; 
-    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1; /* Stă sub telefon */
+    
+    /* Dimensiuni raportate la baza de 395x750px */
+    width: calc(395px * 0.94);  /* 130% Lățime */
+    height: calc(750px * 0.9); /* 120% Înălțime */
+    
     background-size: cover; 
     background-position: center;
-    filter: blur(40px) brightness(0.35) saturate(1.2);
-    z-index: 0; 
+    filter: blur(50px) brightness(0.5) saturate(1.4);
+    border-radius: 80px; /* Urmează forma telefonului dar mai difuz */
+    
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
+    will-change: opacity, transform;
+    pointer-events: none; /* Nu blochează atingerile pe ecran */
 }
 
 .header-tabs { 
@@ -606,15 +617,16 @@ body {
 
 
 
-/* Containerul părinte care ocupă tot ecranul */
+/* Containerul Părinte care centrează totul */
 #app-scaler {
     width: 100vw;
     height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #000; /* Fundal negru în afara "telefonului" */
-    overflow: hidden;
+    background: #000;
+    overflow: visible; /* CRITIC: Permite fundalului să iasă în exterior */
+    position: relative;
     touch-action: none;
 }
 
@@ -632,10 +644,13 @@ body {
 <body oncontextmenu="return false;">
 
   <div id="app-scaler">
-<div class="app-container">
+
     <div class="bg-blur" id="bg-layer-1"></div>
     <div class="bg-blur" id="bg-layer-2"></div>
 
+
+
+<div class="app-container">
     <div id="list-view" style="height:100%; display:flex; flex-direction:column;">
         <div class="header-tabs">
             <div class="tab" id="tab-all" onclick="renderList('all', this)">All</div>
@@ -875,8 +890,8 @@ function applySmartScaling() {
     const docH = 750;
 
     // Calculăm cât la sută din ecran ocupă designul (lăsăm 4% margine de siguranță)
-    const scaleHeight = (winH * 0.98) / docH;
-    const scaleWidth = (winW * 0.98) / docW;
+    const scaleHeight = (winH * 0.90) / docH;
+    const scaleWidth = (winW * 0.90) / docW;
 
     // Alegem valoarea cea mai mică pentru a fi siguri că încape și pe lățime și pe înălțime
     const finalScale = Math.min(scaleHeight, scaleWidth);
