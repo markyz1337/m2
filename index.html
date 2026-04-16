@@ -239,7 +239,7 @@
     gap: 2px;
     width: 20px;
     height: 20px;
-    margin-left: 10px;
+    margin-left: 15px;
 }
 
 .station-item.is-playing .playing-icon {
@@ -288,7 +288,7 @@
 
 
 .fab-search {
-    left: 31px; /* Poziționat în oglindă față de butonul Play */
+    left: 41px; /* Poziționat în oglindă față de butonul Play */
     right: auto;
     background: var(--glass) !important;
     backdrop-filter: blur(15px);
@@ -336,7 +336,7 @@ body {
 
 /* Modificări la Containerul Telefonului */
 .app-container {
-    width: 395px; 
+    width: 425px; 
     height: 750px; 
     position: relative;
     z-index: 10; /* Stă deasupra aurei */
@@ -344,13 +344,7 @@ body {
     flex-direction: column;
     
     /* Fundal semi-transparent cu blur intern (Glassmorphism) */
-    background: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     
-    border-radius: 40px; 
-    border: 7px solid #1a1a1a;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
     overflow: hidden; /* Conținutul listelor rămâne tăiat corect de ramă */
     
     transform-origin: center center;
@@ -366,13 +360,14 @@ body {
     z-index: 1; /* Stă sub telefon */
     
     /* Dimensiuni raportate la baza de 395x750px */
-    width: calc(395px * 0.94);  /* 130% Lățime */
-    height: calc(750px * 0.9); /* 120% Înălțime */
+    width: calc(405px * 0.88);  /* 130% Lățime */
+    height: calc(750px * 0.83); /* 120% Înălțime */
+
     
     background-size: cover; 
     background-position: center;
-    filter: blur(50px) brightness(1) saturate(1.4);
-    border-radius: 80px; /* Urmează forma telefonului dar mai difuz */
+    filter: blur(50px) brightness(0.5) saturate(1.4);
+    border-radius: 20px; /* Urmează forma telefonului dar mai difuz */
     
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
@@ -403,7 +398,7 @@ body {
 
 .tab { 
     background: rgba(250, 250, 250, 0.11); 
-    padding: 8px 17px; 
+    padding: 8px 15px; 
     border-radius: 20px; 
     font-size: 13px; 
     backdrop-filter: blur(10px); 
@@ -427,7 +422,7 @@ body {
     z-index: 10; 
     flex: 1; 
     /* Padding fix: sus (pentru tab-uri), lateral, jos (pentru nav bar) */
-    padding: 65px 20px 100px 20px; 
+    padding: 65px 20px 100px 30px; 
     overflow-y: auto; 
     overscroll-behavior-y: contain; 
     -webkit-overflow-scrolling: touch; 
@@ -536,7 +531,7 @@ body {
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .nav-bar { 
-    position: absolute; bottom: 20px; left: 25px; right: 25px; z-index: 50; 
+    position: absolute; bottom: 20px; left: 35px; right: 35px; z-index: 50; 
     background: rgba(25,25,25,0.7); /* Fundal mai opac la start */
     backdrop-filter: blur(25px); 
     -webkit-backdrop-filter: blur(25px); /* Fix pentru Safari/iOS */
@@ -572,7 +567,7 @@ body {
 .fab { 
     position: absolute; 
     bottom: 115px; 
-    right: 31px; 
+    right: 41px; 
     background: #fff; 
     color: #000;      
     width: 56px; 
@@ -887,11 +882,11 @@ function applySmartScaling() {
     const winW = window.innerWidth;
     const winH = window.innerHeight;
     
-    const docW = 395;
+    const docW = 405;
     const docH = 750;
 
-    const scaleHeight = (winH * 0.90) / docH;
-    const scaleWidth = (winW * 0.90) / docW;
+    const scaleHeight = (winH * 1) / docH;
+    const scaleWidth = (winW * 1) / docW;
     const finalScale = Math.min(scaleHeight, scaleWidth);
 
     // Aplicăm aceeași scalare și telefonului și fundalului din spate
